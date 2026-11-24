@@ -71,7 +71,9 @@
   if(!header)return;
   header.classList.add('dm-adaptive-header');
   header.classList.add(mode==='match'?'dm-adaptive-header--match':'dm-adaptive-header--transparent');
-  if(config.headerMonoLogo)header.classList.add('dm-adaptive-header--mono-logo');
+  const adaptForeground = contrastMode !== 'theme';
+  if(adaptForeground)header.classList.add('dm-adaptive-header--foreground');
+  if(adaptForeground && config.headerMonoLogo)header.classList.add('dm-adaptive-header--mono-logo');
   header.classList.add('dm-adaptive-header--ease-'+headerEasing);
 
   let last='',scheduled=false,stopped=false;
@@ -83,6 +85,10 @@
     const section=findSection(y);
     let bg=section?sectionColor(section):null;
     if(!bg)bg=rgb(config.headerFallbackColor)||light;
+    if(!adaptForeground){
+      header.style.setProperty('--dm-header-bg',toCSS(bg));
+      return;
+    }
     let contrast=contrastMode;
     if(section?.classList.contains('dm-header-light'))contrast='light';
     if(section?.classList.contains('dm-header-dark'))contrast='dark';
