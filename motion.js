@@ -391,7 +391,7 @@
   var lenisInstance=null;
   var smoothReason='not initialized';
   function initSmoothScroll(){
-    if(!cfg.scrollEnabled){smoothReason='Disabled in FERM Motion settings';return;}
+    if(!cfg.scrollEnabled){smoothReason='Disabled in Organic Motion settings';return;}
     if(reduceMotion){smoothReason='Reduced motion preference';return;}
     if(typeof window.Lenis!=='function'){smoothReason='Lenis script did not load (check CDN/security/cache)';return;}
     if(window.__fermLenis||window.lenis){smoothReason='Another smooth scrolling instance detected';return;}
@@ -446,7 +446,7 @@
       },{once:true});
     }catch(error){
       smoothReason='Initialization error: '+(error&&error.message||String(error));
-      if(window.console&&console.warn)console.warn('[FERM Motion] Smooth scroll unavailable; using native scrolling.',error);
+      if(window.console&&console.warn)console.warn('[Organic Motion] Smooth scroll unavailable; using native scrolling.',error);
     }
   }
   function start(){init(document);initColours();initSmoothScroll();schedule();}

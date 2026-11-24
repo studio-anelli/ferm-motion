@@ -18,7 +18,7 @@ final class FERM_Motion_Sliders {
     }
     public static function register_type() {
         register_post_type(self::TYPE, array(
-            'label' => 'FERM Sliders', 'labels'=>array('name'=>'FERM Sliders', 'singular_name'=>'FERM Slider','add_new_item'=>'Add new FERM slider','edit_item'=>'Edit FERM slider'),
+            'label' => 'Motion Sliders', 'labels'=>array('name'=>'Motion Sliders', 'singular_name'=>'Motion Slider','add_new_item'=>'Add new motion slider','edit_item'=>'Edit motion slider'),
             'public'=>false, 'show_ui'=>true, 'show_in_menu'=>'ferm-motion',
             'menu_icon'=>'dashicons-images-alt2', 'supports'=>array('title'),
             'capability_type'=>'post', 'map_meta_cap'=>true,

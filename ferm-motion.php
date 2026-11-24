@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: FERM Motion
+ * Plugin Name: Organic Motion
  * Description: Lightweight, accessible scroll-triggered motion effects for WPBakery / Impreza and regular WordPress content.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Plugin URI: https://anelli.studio/
  * Requires PHP: 7.4
  * Author: Anelli Studio
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) { exit; }
 
 final class FERM_Motion {
     const OPTION = 'ferm_motion_settings';
-    const VERSION = '1.0.0';
+    const VERSION = '1.0.1';
 
     public static function defaults() {
         return array('duration'=>900, 'distance'=>36, 'stagger'=>120, 'parallax'=>60, 'image_parallax'=>35, 'background_parallax'=>45, 'background_overscan'=>8, 'section_parallax'=>20, 'parallax_easing'=>'soft', 'image_easing'=>'soft', 'background_easing'=>'soft', 'section_easing'=>'soft', 'scroll_enabled'=>0, 'scroll_smoothing'=>10, 'scroll_wheel'=>85, 'scroll_focus'=>'off', 'image_trigger'=>45, 'text_trigger'=>95, 'once'=>1, 'enabled'=>1, 'color_enabled'=>1, 'color_position'=>55, 'color_softness'=>'balanced', 'color_start'=>80, 'color_end'=>20, 'color_easing'=> 'smooth', 'color_cream'=>'#F8F4EC', 'color_orange'=>'#F16A37', 'color_green'=>'#507568', 'color_pink'=>'#DD8EB9', 'color_ink'=>'#25231F', 'header_enabled'=>0, 'header_mode'=>'transparent', 'header_contrast'=>'auto', 'header_selector'=>'.l-header', 'header_mono_logo'=>0, 'header_easing'=>'follow');
@@ -76,7 +76,7 @@ final class FERM_Motion {
         }
     }
     public static function menu() {
-        add_menu_page('FERM Motion', 'FERM Motion', 'manage_options', 'ferm-motion', array(__CLASS__, 'page'), 'dashicons-controls-play', 57);
+        add_menu_page('Organic Motion', 'Organic Motion', 'manage_options', 'ferm-motion', array(__CLASS__, 'page'), 'dashicons-controls-play', 57);
         add_submenu_page('ferm-motion', 'Motion settings', 'Settings', 'manage_options', 'ferm-motion', array(__CLASS__, 'page'));
     }
     public static function register() {
@@ -154,7 +154,7 @@ final class FERM_Motion {
     public static function page() {
         if (!current_user_can('manage_options')) { return; }
         $s=self::settings(); ?>
-        <div class="wrap dm-settings"><h1>FERM Motion <small style="font-weight:normal;color:#646970">v<?php echo esc_html(self::VERSION); ?></small></h1>
+        <div class="wrap dm-settings"><h1>Organic Motion <small style="font-weight:normal;color:#646970">v<?php echo esc_html(self::VERSION); ?></small></h1>
         <p>Configure your motion system here. In WPBakery, add the relevant class to <strong>Extra class name</strong> on a Row, Text Block, or image element.</p>
         <style>
         .dm-settings{max-width:1080px}.dm-settings .dm-tab-links{display:flex;gap:6px;margin:22px 0 0;border-bottom:1px solid #c3c4c7;flex-wrap:wrap}
@@ -178,7 +178,7 @@ final class FERM_Motion {
           <div role="tabpanel" id="dm-panel-general" class="dm-panel dm-active" aria-labelledby="dm-tab-general">
             <h2>General motion</h2><p>Shared timing and animation behaviour across the site.</p>
             <table class="form-table" role="presentation"><tbody>
-            <tr><th scope="row">Enable animations</th><td><label><input type="checkbox" name="<?php echo esc_attr(self::OPTION); ?>[enabled]" value="1" <?php checked($s['enabled'],1); ?>> Enable FERM Motion</label></td></tr>
+            <tr><th scope="row">Enable animations</th><td><label><input type="checkbox" name="<?php echo esc_attr(self::OPTION); ?>[enabled]" value="1" <?php checked($s['enabled'],1); ?>> Enable Organic Motion</label></td></tr>
             <?php self::field('duration','Reveal duration',250,2400,'ms');self::field('distance','Reveal movement',0,120,'px');self::field('stagger','Stagger between items or words',0,600,'ms'); ?>
             <tr><th scope="row">Repeat behaviour</th><td><label><input type="checkbox" name="<?php echo esc_attr(self::OPTION); ?>[once]" value="1" <?php checked($s['once'],1); ?>> Reveal only once per page visit</label></td></tr>
             </tbody></table><p class="dm-tip">All effects respect reduced-motion preferences. Content stays visible if the plugin is disabled.</p>
@@ -278,7 +278,7 @@ final class FERM_Motion {
             </tbody></table>
             <p class="dm-tip">Start with smoothing 10 and wheel 85%, content focus Off. Do not run other smooth-scroll plugins simultaneously. Add <code>data-lenis-prevent</code> to nested custom scroll containers if needed.</p>
           </div>
-          <?php submit_button('Save FERM Motion settings'); ?>
+          <?php submit_button('Save Organic Motion settings'); ?>
         </form>
         <details style="margin-top:16px"><summary><strong>Diagnostics and advanced usage</strong></summary>
           <p>On a published page, open developer tools and run <code>window.FERMMotion?.diagnostics()</code>. Clear SG Cache after updating.</p>
