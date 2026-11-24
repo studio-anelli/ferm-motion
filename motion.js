@@ -410,7 +410,7 @@
       }
     } else if(mode==='image'){
       if(el._dmImage){
-        var imageHeight=Math.max(1,el.getBoundingClientRect().height);
+        var imageHeight=Math.max(1,el._dmImage.offsetHeight);
         var scale=1+(travel+28)/imageHeight;
         if(el._dmOrganicSeed){
           const easing = cfg.organicEasing || 'editorial';
@@ -457,12 +457,12 @@
       if(rect.bottom<0||rect.top>h)return;
       var progress=Math.max(0,Math.min(1,(h-rect.top)/(h+rect.height)));
       var mode=el.classList.contains('dm-bg-parallax')?'background':el.classList.contains('dm-section-parallax')?'section':el.classList.contains('dm-image-parallax')?'image':'legacy';
-      var defaults={background:number(cfg.backgroundParallax,45,150),image:number(cfg.imageParallax,35,150),section:number(cfg.sectionParallax,20,80),legacy:number(cfg.parallax,60,150)};
-      var travel=setting(el,'parallax',defaults[mode],mode==='section'?80:150);
-      if(el._dmOrganicSeed){
-        const proportionalTravel = el._dmImage.offsetHeight*number(cfg.organicTravelPercent,7,30)/100;
-        travel = setting(el,'parallax',proportionalTravel,150);
-      }
+      const percentages = {background:9,image:7,section:4,legacy:12};
+      const configured = {background:cfg.backgroundParallax,image:cfg.imageParallax,section:cfg.sectionParallax,legacy:cfg.parallax};
+      const measuredElement = (mode==='image' && el._dmImage) || (mode==='section' && el._dmSectionContent) || el;
+      const percent = el._dmOrganicSeed ? number(cfg.organicTravelPercent,7,30) : number(configured[mode],percentages[mode],30);
+      const proportionalTravel = measuredElement.offsetHeight*percent/100;
+      const travel = setting(el,'parallax',proportionalTravel,mode==='section'?80:150);
       // Maximum motion is half the configured travel, centered around 0.
       var y=(progress-.5)*travel;
       if(mode==='section')y*=Math.sin(Math.PI*progress);
