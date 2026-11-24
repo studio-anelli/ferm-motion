@@ -13,7 +13,11 @@
     root.dataset.dmSliderReady='1';
     const vertical=opt.direction==='vertical';
     const normalScroll=()=>vertical?track.scrollTop:track.scrollLeft;
-    const writeScroll=v=>{if(vertical)track.scrollTop=v;else track.scrollLeft=v;};
+    let lastWrittenScroll=normalScroll();
+    const writeScroll=v=>{
+      if(vertical)track.scrollTop=v;else track.scrollLeft=v;
+      lastWrittenScroll=normalScroll();
+    };
     const travel=()=>vertical?track.scrollHeight-track.clientHeight:track.scrollWidth-track.clientWidth;
     const axisSize=()=>vertical?track.clientHeight:track.clientWidth;
     const reduce=reduced();
@@ -150,9 +154,8 @@
       },{passive:true});
       track.addEventListener('touchcancel',()=>{dragging=false;current=target=normalScroll();wrap();ensure();},{passive:true});
     }
-    // A mostly vertical trackpad gesture can carry a small horizontal delta.
-    // Keep it from writing to the track while horizontal autoplay is driving it.
-    if(vertical||autoplay){
+    // Only vertical tracks share the page's wheel axis.
+    if(vertical){
       track.addEventListener('wheel',event=>{
         if(event.defaultPrevented || !event.cancelable || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)return;
         if(!event.deltaY || Math.abs(event.deltaX)>Math.abs(event.deltaY))return;
@@ -164,8 +167,13 @@
     }
     track.addEventListener('scroll',()=>{
       if(dragging)return;
-      // Detect actual user scrolling of the track; our own scroll writes are not a target.
-      if(!frame){current=target=normalScroll();wrap();applyDrift();}
+      const position=normalScroll();
+      // Let native trackpad scrolling set the starting point for horizontal autoplay.
+      if(!frame || (!vertical && autoplay && Math.abs(position-lastWrittenScroll)>.5)){
+        current=target=position;
+        lastWrittenScroll=position;
+        wrap();applyDrift();
+      }
     },{passive:true});
     track.addEventListener('keydown',e=>{
       const forward=(e.key==='ArrowRight'&&!vertical)||(e.key==='ArrowDown'&&vertical);
