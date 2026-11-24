@@ -392,12 +392,14 @@
   const organicProgress = new WeakMap();
 
   function applyParallax(el,mode,y,travel,progress){
-    var previous=easedOffsets.get(el);
-    var factor=easingAmount(mode);
-    var value=previous===undefined?y:previous+(y-previous)*factor;
-    if(Math.abs(y-value)<.15)value=y;
-    easedOffsets.set(el,value);
-    if(Math.abs(y-value)>=.15)easingActive=true;
+    let value = y;
+    if(!el._dmOrganicSeed){
+      const previous = easedOffsets.get(el) ?? y;
+      value = previous+(y-previous)*easingAmount(mode);
+      if(Math.abs(y-value)<.15)value=y;
+      easedOffsets.set(el,value);
+      if(value!==y)easingActive=true;
+    }
     if(mode==='section'){
       if(el._dmSectionContent)el.style.setProperty('--dm-y',value.toFixed(2)+'px');
     } else if(mode==='background'){
@@ -411,17 +413,32 @@
         var imageHeight=Math.max(1,el.getBoundingClientRect().height);
         var scale=1+(travel+28)/imageHeight;
         if(el._dmOrganicSeed){
-          const previousProgress = organicProgress.get(el) ?? progress;
-          const difference = progress-previousProgress;
-          const position = Math.abs(difference)<.001 ? progress : previousProgress+difference*Math.min(factor,.18);
-          organicProgress.set(el,position);
-          if(position!==progress)easingActive=true;
+          const easing = cfg.organicEasing || 'editorial';
+          const previous = organicProgress.get(el) || {position:progress,velocity:0};
+          const difference = progress-previous.position;
+          let position = progress;
+          let velocity = 0;
+          if(easing==='bubble'){
+            velocity = (previous.velocity+difference*.12)*.76;
+            position = previous.position+velocity;
+            // Bound the overshoot even after a fast scroll jump.
+            position = Math.max(-.08,Math.min(1.08,position));
+          } else if(easing==='editorial'){
+            position = previous.position+difference*.18;
+          }
+          if(Math.abs(progress-position)<.001 && Math.abs(velocity)<.001){
+            position=progress;
+            velocity=0;
+          }
+          organicProgress.set(el,{position,velocity});
+          if(position!==progress || velocity!==0)easingActive=true;
 
           const sample = position*1.35;
           const seed = el._dmOrganicSeed;
-          const x = organicNoise(sample,seed)*7;
-          value += organicNoise(sample,seed+4)*6;
-          const zoom = (1+organicNoise(sample,seed+8))*.014;
+          const intensity = number(cfg.organicIntensity,100,200)/100;
+          const x = organicNoise(sample,seed)*7*intensity;
+          value = (position-.5)*travel+organicNoise(sample,seed+4)*6*intensity;
+          const zoom = (1+organicNoise(sample,seed+8))*.014*intensity;
           const width = Math.max(1,el._dmImage.offsetWidth);
           const height = Math.max(1,el._dmImage.offsetHeight);
           scale = Math.max(scale,1+2*(Math.abs(x)+1)/width,1+2*(Math.abs(value)+1)/height)+zoom;
@@ -441,7 +458,7 @@
       var progress=Math.max(0,Math.min(1,(h-rect.top)/(h+rect.height)));
       var mode=el.classList.contains('dm-bg-parallax')?'background':el.classList.contains('dm-section-parallax')?'section':el.classList.contains('dm-image-parallax')?'image':'legacy';
       var defaults={background:number(cfg.backgroundParallax,45,150),image:number(cfg.imageParallax,35,150),section:number(cfg.sectionParallax,20,80),legacy:number(cfg.parallax,60,150)};
-      var travel=setting(el,'parallax',defaults[mode],mode==='section'?80:150);
+      var travel=setting(el,'parallax',el._dmOrganicSeed ? number(cfg.organicParallax,35,150) : defaults[mode],mode==='section'?80:150);
       // Maximum motion is half the configured travel, centered around 0.
       var y=(progress-.5)*travel;
       if(mode==='section')y*=Math.sin(Math.PI*progress);
