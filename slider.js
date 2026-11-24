@@ -150,8 +150,9 @@
       },{passive:true});
       track.addEventListener('touchcancel',()=>{dragging=false;current=target=normalScroll();wrap();ensure();},{passive:true});
     }
-    // Vertical galleries share the page's wheel axis. Keep drag, swipe and arrow keys on the gallery.
-    if(vertical){
+    // A mostly vertical trackpad gesture can carry a small horizontal delta.
+    // Keep it from writing to the track while horizontal autoplay is driving it.
+    if(vertical||autoplay){
       track.addEventListener('wheel',event=>{
         if(event.defaultPrevented || !event.cancelable || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)return;
         if(!event.deltaY || Math.abs(event.deltaX)>Math.abs(event.deltaY))return;
