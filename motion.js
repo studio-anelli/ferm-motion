@@ -192,7 +192,26 @@
       el._dmImage=pic;
       pic.classList.add('dm-parallax-picture');
       // The wrapper (not row) acts as the clipping frame.
-      if(pic!==el){el.style.overflow='clip';}
+      if(pic!==el){
+        const hasRadius = style => [
+          style.borderTopLeftRadius, style.borderTopRightRadius,
+          style.borderBottomRightRadius, style.borderBottomLeftRadius
+        ].some(radius => radius.split(/\s+/).some(value => parseFloat(value) > 0));
+        el.style.overflow='clip';
+        if(!hasRadius(getComputedStyle(el))){
+          for(let source=pic.parentElement;source&&source!==el;source=source.parentElement){
+            const style=getComputedStyle(source);
+            if(hasRadius(style)){
+              el.style.borderRadius=style.borderRadius;
+              break;
+            }
+          }
+          if(!el.style.borderRadius){
+            const style=getComputedStyle(pic);
+            if(hasRadius(style))el.style.borderRadius=style.borderRadius;
+          }
+        }
+      }
       stats.imageParallax++;return true;
     }
     if(el.classList.contains('dm-section-parallax')){
