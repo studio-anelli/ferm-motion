@@ -150,6 +150,17 @@
       },{passive:true});
       track.addEventListener('touchcancel',()=>{dragging=false;current=target=normalScroll();wrap();ensure();},{passive:true});
     }
+    // Vertical galleries share the page's wheel axis. Keep drag, swipe and arrow keys on the gallery.
+    if(vertical){
+      track.addEventListener('wheel',event=>{
+        if(event.defaultPrevented || !event.cancelable || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)return;
+        if(!event.deltaY || Math.abs(event.deltaX)>Math.abs(event.deltaY))return;
+        const mode=event.deltaMode;
+        const unit=mode===1 ? (parseFloat(getComputedStyle(track).lineHeight)||16) : mode===2 ? window.innerHeight : 1;
+        event.preventDefault();
+        window.scrollBy({top:event.deltaY*unit,behavior:'instant'});
+      },{passive:false});
+    }
     track.addEventListener('scroll',()=>{
       if(dragging)return;
       // Detect actual user scrolling of the track; our own scroll writes are not a target.
