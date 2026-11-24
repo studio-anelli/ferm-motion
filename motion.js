@@ -458,7 +458,11 @@
       var progress=Math.max(0,Math.min(1,(h-rect.top)/(h+rect.height)));
       var mode=el.classList.contains('dm-bg-parallax')?'background':el.classList.contains('dm-section-parallax')?'section':el.classList.contains('dm-image-parallax')?'image':'legacy';
       var defaults={background:number(cfg.backgroundParallax,45,150),image:number(cfg.imageParallax,35,150),section:number(cfg.sectionParallax,20,80),legacy:number(cfg.parallax,60,150)};
-      var travel=setting(el,'parallax',el._dmOrganicSeed ? number(cfg.organicParallax,35,150) : defaults[mode],mode==='section'?80:150);
+      var travel=setting(el,'parallax',defaults[mode],mode==='section'?80:150);
+      if(el._dmOrganicSeed){
+        const proportionalTravel = el._dmImage.offsetHeight*number(cfg.organicTravelPercent,7,30)/100;
+        travel = setting(el,'parallax',proportionalTravel,150);
+      }
       // Maximum motion is half the configured travel, centered around 0.
       var y=(progress-.5)*travel;
       if(mode==='section')y*=Math.sin(Math.PI*progress);
