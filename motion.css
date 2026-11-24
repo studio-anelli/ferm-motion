@@ -1,0 +1,51 @@
+/* No-js safe: every element remains visible until JS initializes it. */
+.dm-ready.dm-reveal{opacity:0;transform:translate3d(0,var(--dm-travel,36px),0);transition:opacity var(--dm-time,900ms) cubic-bezier(.22,1,.36,1),transform var(--dm-time,900ms) cubic-bezier(.22,1,.36,1)}
+.dm-ready.dm-reveal.dm-visible{opacity:1;transform:translate3d(0,0,0)}
+.dm-ready.dm-lines .dm-line{display:block;opacity:0;transform:translate3d(0,var(--dm-travel,36px),0);transition:opacity var(--dm-time,900ms) cubic-bezier(.22,1,.36,1),transform var(--dm-time,900ms) cubic-bezier(.22,1,.36,1);transition-delay:var(--dm-delay,0ms)}
+.dm-ready.dm-lines.dm-visible .dm-line{opacity:1;transform:translate3d(0,0,0)}
+.dm-ready.dm-stagger .dm-stagger-item{opacity:0;transform:translate3d(0,var(--dm-travel,36px),0);transition:opacity var(--dm-time,900ms) cubic-bezier(.22,1,.36,1),transform var(--dm-time,900ms) cubic-bezier(.22,1,.36,1);transition-delay:var(--dm-delay,0ms)}
+.dm-ready.dm-stagger.dm-visible .dm-stagger-item{opacity:1;transform:translate3d(0,0,0)}
+/* No inset clipping: the photograph always occupies the exact element bounds.
+   Animate the image inside the frame, not the frame edges. */
+.dm-ready.dm-image{overflow:hidden;clip-path:none;transition:none}
+.dm-ready.dm-image img{display:block;opacity:0;transform:scale(1.045);transform-origin:center center;transition:opacity var(--dm-time,900ms) ease,transform calc(var(--dm-time,900ms) * 1.5) cubic-bezier(.22,1,.36,1)}
+.dm-ready.dm-image.dm-visible img:not(.dm-parallax-picture){opacity:1;transform:scale(1)}
+.dm-ready.dm-image.dm-visible img.dm-parallax-picture{opacity:1}
+/* Word reveals work on existing headings or WPBakery text wrappers. */
+.dm-ready.dm-words .dm-word{display:inline-block;opacity:0;transform:translate3d(0,.4em,0);transition:opacity var(--dm-time,900ms) ease,transform var(--dm-time,900ms) cubic-bezier(.22,1,.36,1);transition-delay:var(--dm-delay,0ms)}
+.dm-ready.dm-words.dm-visible .dm-word{opacity:1;transform:translate3d(0,0,0)}
+/* Never translate a WPBakery ROW: the row background must meet adjacent sections exactly. */
+.dm-ready.dm-parallax:not(.dm-section-parallax):not(.dm-image-parallax){transform:translate3d(0,var(--dm-y,0px),0)}
+/* Image motion stays INSIDE its frame; scale compensates for translation at every scroll position. */
+.dm-image-parallax{overflow:clip}
+.dm-image-parallax .dm-parallax-picture,
+.dm-image-parallax.dm-image img.dm-parallax-picture{
+  transform:translate3d(0,var(--dm-y,0px),0) scale(var(--dm-parallax-scale,1.12));
+  transform-origin:50% 50%;will-change:transform;
+}
+/* Move only the content shell, and return to zero movement at section boundaries. */
+.dm-section-parallax > .dm-section-motion-content{translate:0 var(--dm-y,0px);will-change:translate}
+
+.dm-ready.dm-float{animation:dm-floating 6s ease-in-out infinite alternate}
+@keyframes dm-floating{from{translate:0 -7px}to{translate:0 7px}}
+/* Background images: retain row text and layout untouched, animate a separate visual layer. */
+.dm-bg-host{isolation:isolate}
+/* Clip only the decorative photo layer, never the row or the sticky labels. */
+.dm-bg-host>.dm-bg-frame{position:absolute;inset:0;pointer-events:none;z-index:-1;overflow:hidden}
+.dm-bg-frame>.dm-bg-layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;background-size:inherit;background-repeat:inherit;background-position:inherit;will-change:background-position,opacity,transform;transform-origin:50% 50%;}
+.dm-bg-host.dm-bg-reveal>.dm-bg-frame>.dm-bg-layer,.dm-bg-owner.dm-bg-reveal .dm-bg-layer{opacity:0;transition:opacity var(--dm-time,900ms) ease,transform calc(var(--dm-time,900ms) * 1.4) cubic-bezier(.22,1,.36,1)}
+.dm-bg-host.dm-bg-reveal.dm-visible>.dm-bg-frame>.dm-bg-layer,.dm-bg-owner.dm-bg-reveal.dm-visible .dm-bg-layer{opacity:1}
+/* Never clip the WPBakery row: overflow on section wrappers can break sticky side labels. */
+@media(prefers-reduced-motion:reduce){.dm-ready.dm-reveal,.dm-ready.dm-lines .dm-line,.dm-ready.dm-words .dm-word,.dm-ready.dm-stagger .dm-stagger-item,.dm-ready.dm-image{opacity:1!important;transform:none!important;clip-path:none!important;transition:none!important}.dm-ready.dm-image img,.dm-ready.dm-parallax{transform:none!important;transition:none!important}.dm-ready.dm-float{animation:none!important;translate:none!important}.dm-bg-layer{transform:none!important;transition:none!important;clip-path:none!important;opacity:1!important}}
+
+/* Optional: use this class on photos with built-in WordPress figure margins. */
+.dm-image .wpb_single_image,.dm-image .wpb_wrapper,.dm-image figure,.dm-image .vc_single_image-wrapper{margin-top:0;margin-bottom:0}
+
+/* Parallax image: fixed frame, enlarged picture; never translate section wrapper. */
+.dm-image-parallax .dm-parallax-picture{display:block;width:100%;max-width:100%}
+/* Background fit and focal point are provided by computed WPBakery/Impreza styles. */
+@media(prefers-reduced-motion:reduce){
+  .dm-image-parallax .dm-parallax-picture{transform:none!important}
+  .dm-section-parallax > .dm-section-motion-content{translate:none!important}
+}
+
