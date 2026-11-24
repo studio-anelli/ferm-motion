@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Organic Motion
  * Description: Lightweight, accessible scroll-triggered motion effects for WPBakery / Impreza and regular WordPress content.
- * Version: 1.0.2
+ * Version: 1.0.3
  * Plugin URI: https://anelli.studio/
  * Requires PHP: 7.4
  * Author: Anelli Studio
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) { exit; }
 
 final class FERM_Motion {
     const OPTION = 'ferm_motion_settings';
-    const VERSION = '1.0.2';
+    const VERSION = '1.0.3';
 
     public static function defaults() {
         return array('duration'=>900, 'distance'=>36, 'stagger'=>120, 'parallax'=>60, 'image_parallax'=>35, 'background_parallax'=>45, 'background_overscan'=>8, 'section_parallax'=>20, 'parallax_easing'=>'soft', 'image_easing'=>'soft', 'background_easing'=>'soft', 'section_easing'=>'soft', 'scroll_enabled'=>0, 'scroll_smoothing'=>10, 'scroll_wheel'=>85, 'scroll_focus'=>'off', 'image_trigger'=>45, 'text_trigger'=>95, 'once'=>1, 'enabled'=>1, 'color_enabled'=>1, 'color_position'=>55, 'color_softness'=>'balanced', 'color_start'=>80, 'color_end'=>20, 'color_easing'=> 'smooth', 'color_cream'=>'#F8F4EC', 'color_orange'=>'#F16A37', 'color_green'=>'#507568', 'color_pink'=>'#DD8EB9', 'color_ink'=>'#25231F', 'header_enabled'=>0, 'header_mode'=>'transparent', 'header_contrast'=>'auto', 'header_selector'=>'.l-header', 'header_mono_logo'=>0, 'header_easing'=>'follow');
@@ -119,6 +119,7 @@ final class FERM_Motion {
             'color_start'=>max(30,min(95,absint($raw['color_start'] ?? 80))),
             'color_end'=>max(5,min(70,absint($raw['color_end'] ?? 20))),
             'color_easing'=>in_array($raw['color_easing'] ?? '',array('linear','smooth'),true) ? $raw['color_easing'] : 'smooth',
+            'color_names'=>array_map('sanitize_text_field', array_intersect_key((array) ($raw['color_names'] ?? array()), array_flip(array('cream','orange','green','pink','ink')))),
             'color_cream'=>sanitize_hex_color($raw['color_cream'] ?? '#F8F4EC') ?: '#F8F4EC',
             'color_orange'=>sanitize_hex_color($raw['color_orange'] ?? '#F16A37') ?: '#F16A37',
             'color_green'=>sanitize_hex_color($raw['color_green'] ?? '#507568') ?: '#507568',
@@ -149,7 +150,9 @@ final class FERM_Motion {
     }
     public static function color_field($name,$title,$class) {
         $s=self::settings();
-        printf('<label class="dm-color-field"><span>%1$s</span><input type="color" name="%2$s[%3$s]" value="%4$s"><code>dm-color-%5$s</code></label>',esc_html($title),esc_attr(self::OPTION),esc_attr('color_'.$name),esc_attr($s['color_'.$name]),esc_html($class));
+        $label = ($s['color_names'][$name] ?? '') ?: $title;
+        printf('<div class="dm-color-field"><label><span>Swatch name</span><input type="text" name="%1$s[color_names][%2$s]" value="%3$s"></label><label><span>Colour</span><input type="color" name="%1$s[color_%2$s]" value="%4$s"></label><code>dm-color-%5$s</code></div>',
+            esc_attr(self::OPTION), esc_attr($name), esc_attr($label), esc_attr($s['color_'.$name]), esc_html($class));
     }
     public static function page() {
         if (!current_user_can('manage_options')) { return; }
@@ -216,7 +219,7 @@ final class FERM_Motion {
           </div>
           <div role="tabpanel" id="dm-panel-colours" class="dm-panel" aria-labelledby="dm-tab-colours">
             <h2>Scroll colour flow</h2><p class="description">Two simple controls: where colours change, and how gently. No scroll speed modification or section translation.</p>
-            <p>Set the FERM palette here. Then give each consecutive WPBakery row <code>dm-color-flow</code> plus a colour class. The plugin gradually blends between them while scrolling. The <strong>row itself never moves</strong>.</p>
+            <p>Name the swatches and set their colours here. Use the class shown below each swatch in WPBakery. Then give each consecutive WPBakery row <code>dm-color-flow</code> plus a colour class. The plugin gradually blends between them while scrolling. The <strong>row itself never moves</strong>.</p>
             <div class="dm-color-grid">
               <?php self::color_field('cream','Cream','cream');self::color_field('orange','Orange','orange');self::color_field('green','Green','green');self::color_field('pink','Pink','pink');self::color_field('ink','Ink','ink'); ?>
             </div>
