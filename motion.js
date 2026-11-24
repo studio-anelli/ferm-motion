@@ -194,7 +194,8 @@
       if(pic!==el){
         const imageBounds = pic.getBoundingClientRect();
         let frame = el;
-        let radius = '';
+        const configuredRadius = number(cfg.imageParallaxRadius,0,200);
+        let radius = configuredRadius ? configuredRadius+'px' : '';
         for(let source=pic;source;source=source.parentElement){
           const style = getComputedStyle(source);
           if(!radius && [
@@ -213,15 +214,23 @@
         }
         frame.style.overflow='clip';
         if(radius){
-          const bounds = frame.getBoundingClientRect();
-          const inset = imageBounds.width && imageBounds.height
-            ? [imageBounds.top-bounds.top,bounds.right-imageBounds.right,bounds.bottom-imageBounds.bottom,imageBounds.left-bounds.left]
-            : [0,0,0,0];
-          const edges = inset.map((value,index) => {
-            const size = index%2 ? bounds.width : bounds.height;
-            return size ? Math.max(0,value)*100/size+'%' : '0';
-          });
-          frame.style.clipPath='inset('+edges.join(' ')+' round '+radius+')';
+          const syncClip = () => {
+            // Measure the resting image even when parallax is already active.
+            const transform = pic.style.transform;
+            pic.style.transform = 'none';
+            const image = pic.getBoundingClientRect();
+            const bounds = frame.getBoundingClientRect();
+            pic.style.transform = transform;
+            if(!image.width || !image.height || !bounds.width || !bounds.height)return;
+            const inset = [image.top-bounds.top,bounds.right-image.right,bounds.bottom-image.bottom,image.left-bounds.left];
+            frame.style.clipPath='inset('+inset.map(value => Math.max(0,value)+'px').join(' ')+' round '+radius+')';
+          };
+          syncClip();
+          if('ResizeObserver' in window){
+            const observer = new ResizeObserver(syncClip);
+            observer.observe(pic);
+            observer.observe(frame);
+          }
         }
       }
       pic.classList.add('dm-parallax-picture');

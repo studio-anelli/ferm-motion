@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Organic Motion
  * Description: Lightweight, accessible scroll-triggered motion effects for WPBakery / Impreza and regular WordPress content.
- * Version: 1.0.5
+ * Version: 1.0.6
  * Plugin URI: https://anelli.studio/
  * Requires PHP: 7.4
  * Author: Anelli Studio
@@ -15,10 +15,10 @@ if (!defined('ABSPATH')) { exit; }
 
 final class FERM_Motion {
     const OPTION = 'ferm_motion_settings';
-    const VERSION = '1.0.5';
+    const VERSION = '1.0.6';
 
     public static function defaults() {
-        return array('duration'=>900, 'distance'=>36, 'stagger'=>120, 'parallax'=>60, 'image_parallax'=>35, 'background_parallax'=>45, 'background_overscan'=>8, 'section_parallax'=>20, 'parallax_easing'=>'soft', 'image_easing'=>'soft', 'background_easing'=>'soft', 'section_easing'=>'soft', 'scroll_enabled'=>0, 'scroll_smoothing'=>10, 'scroll_wheel'=>85, 'scroll_focus'=>'off', 'image_trigger'=>45, 'text_trigger'=>95, 'once'=>1, 'enabled'=>1, 'color_enabled'=>1, 'color_position'=>55, 'color_softness'=>'balanced', 'color_start'=>80, 'color_end'=>20, 'color_easing'=> 'smooth', 'color_cream'=>'#F8F4EC', 'color_orange'=>'#F16A37', 'color_green'=>'#507568', 'color_pink'=>'#DD8EB9', 'color_ink'=>'#25231F', 'header_enabled'=>0, 'header_mode'=>'transparent', 'header_contrast'=>'auto', 'header_selector'=>'.l-header', 'header_mono_logo'=>0, 'header_easing'=>'follow');
+        return array('duration'=>900, 'distance'=>36, 'stagger'=>120, 'parallax'=>60, 'image_parallax'=>35, 'image_parallax_radius'=>0, 'background_parallax'=>45, 'background_overscan'=>8, 'section_parallax'=>20, 'parallax_easing'=>'soft', 'image_easing'=>'soft', 'background_easing'=>'soft', 'section_easing'=>'soft', 'scroll_enabled'=>0, 'scroll_smoothing'=>10, 'scroll_wheel'=>85, 'scroll_focus'=>'off', 'image_trigger'=>45, 'text_trigger'=>95, 'once'=>1, 'enabled'=>1, 'color_enabled'=>1, 'color_position'=>55, 'color_softness'=>'balanced', 'color_start'=>80, 'color_end'=>20, 'color_easing'=> 'smooth', 'color_cream'=>'#F8F4EC', 'color_orange'=>'#F16A37', 'color_green'=>'#507568', 'color_pink'=>'#DD8EB9', 'color_ink'=>'#25231F', 'header_enabled'=>0, 'header_mode'=>'transparent', 'header_contrast'=>'auto', 'header_selector'=>'.l-header', 'header_mono_logo'=>0, 'header_easing'=>'follow');
     }
     public static function settings() {
         return wp_parse_args(get_option(self::OPTION, array()), self::defaults());
@@ -44,6 +44,7 @@ final class FERM_Motion {
             'stagger'  => (int) $settings['stagger'],
             'parallax' => (int) $settings['parallax'],
             'imageParallax' => (int) $settings['image_parallax'],
+            'imageParallaxRadius' => (int) $settings['image_parallax_radius'],
             'backgroundParallax' => (int) $settings['background_parallax'],
             'backgroundOverscan' => (int) $settings['background_overscan'],
             'sectionParallax' => (int) $settings['section_parallax'],
@@ -93,6 +94,7 @@ final class FERM_Motion {
             'stagger'=>max(0, min(600, absint($raw['stagger'] ?? 120))),
             'parallax'=>max(0, min(150, absint($raw['parallax'] ?? 60))),
             'image_parallax'=>max(0, min(150, absint($raw['image_parallax'] ?? 35))),
+            'image_parallax_radius'=>max(0, min(200, (int) ($raw['image_parallax_radius'] ?? 0))),
             'background_parallax'=>max(0, min(150, absint($raw['background_parallax'] ?? 45))),
             'background_overscan'=>max(0, min(30, absint($raw['background_overscan'] ?? 8))),
             'section_parallax'=>max(0, min(80, absint($raw['section_parallax'] ?? 20))),
@@ -212,7 +214,7 @@ final class FERM_Motion {
           <div role="tabpanel" id="dm-panel-parallax" class="dm-panel" aria-labelledby="dm-tab-parallax">
             <h2>Parallax and floating</h2><p>The photo or inner content moves. Row boundaries and backgrounds remain aligned with adjacent sections.</p>
             <table class="form-table" role="presentation"><tbody>
-            <?php self::field('image_parallax','Image parallax',0,150,'px');self::ease_field('image_easing','Image easing');self::field('background_parallax','Background-image parallax',0,150,'px');self::ease_field('background_easing','Background easing');self::field('background_overscan','Background photo overscan',0,30,'% (0 = exact sizing; higher = fewer exposed edges)');self::field('section_parallax','Section-content parallax',0,80,'px');self::ease_field('section_easing','Section easing');self::field('parallax','Legacy graphic parallax',0,150,'px');self::ease_field('parallax_easing','Graphic easing'); ?>
+            <?php self::field('image_parallax','Image parallax',0,150,'px');self::field('image_parallax_radius','Image parallax corner radius',0,200,'px (0 uses the existing image styling)');self::ease_field('image_easing','Image easing');self::field('background_parallax','Background-image parallax',0,150,'px');self::ease_field('background_easing','Background easing');self::field('background_overscan','Background photo overscan',0,30,'% (0 = exact sizing; higher = fewer exposed edges)');self::field('section_parallax','Section-content parallax',0,80,'px');self::ease_field('section_easing','Section easing');self::field('parallax','Legacy graphic parallax',0,150,'px');self::ease_field('parallax_easing','Graphic easing'); ?>
             </tbody></table>
             <p class="dm-tip">Easing makes the visual element catch up with the scroll. It does not slow or block the page itself. Direct follows immediately; Soft and Cinematic add progressively more inertia.</p>
             <p><code>dm-image-parallax</code> on a single image; <code>dm-bg-parallax</code> on a photo row; <code>dm-section-parallax</code> on a content row; <code>dm-float</code> on an individual illustration.</p>
