@@ -190,28 +190,41 @@
       var pic=el.matches('img')?el:el.querySelector('img');
       if(!pic)return false;
       el._dmImage=pic;
-      pic.classList.add('dm-parallax-picture');
       // The wrapper (not row) acts as the clipping frame.
       if(pic!==el){
-        const hasRadius = style => [
-          style.borderTopLeftRadius, style.borderTopRightRadius,
-          style.borderBottomRightRadius, style.borderBottomLeftRadius
-        ].some(radius => radius.split(/\s+/).some(value => parseFloat(value) > 0));
-        el.style.overflow='clip';
-        if(!hasRadius(getComputedStyle(el))){
-          for(let source=pic.parentElement;source&&source!==el;source=source.parentElement){
-            const style=getComputedStyle(source);
-            if(hasRadius(style)){
-              el.style.borderRadius=style.borderRadius;
-              break;
+        const imageBounds = pic.getBoundingClientRect();
+        let frame = el;
+        let radius = '';
+        for(let source=pic;source;source=source.parentElement){
+          const style = getComputedStyle(source);
+          if(!radius && [
+            style.borderTopLeftRadius, style.borderTopRightRadius,
+            style.borderBottomRightRadius, style.borderBottomLeftRadius
+          ].some(value => value.split(/\s+/).some(part => parseFloat(part) > 0))){
+            radius = style.borderRadius;
+          }
+          if(source!==pic && frame===el && imageBounds.width && imageBounds.height){
+            const bounds = source.getBoundingClientRect();
+            if(['left','top','right','bottom'].every(edge => Math.abs(bounds[edge]-imageBounds[edge]) < 1)){
+              frame = source;
             }
           }
-          if(!el.style.borderRadius){
-            const style=getComputedStyle(pic);
-            if(hasRadius(style))el.style.borderRadius=style.borderRadius;
-          }
+          if(source===el)break;
+        }
+        frame.style.overflow='clip';
+        if(radius){
+          const bounds = frame.getBoundingClientRect();
+          const inset = imageBounds.width && imageBounds.height
+            ? [imageBounds.top-bounds.top,bounds.right-imageBounds.right,bounds.bottom-imageBounds.bottom,imageBounds.left-bounds.left]
+            : [0,0,0,0];
+          const edges = inset.map((value,index) => {
+            const size = index%2 ? bounds.width : bounds.height;
+            return size ? Math.max(0,value)*100/size+'%' : '0';
+          });
+          frame.style.clipPath='inset('+edges.join(' ')+' round '+radius+')';
         }
       }
+      pic.classList.add('dm-parallax-picture');
       stats.imageParallax++;return true;
     }
     if(el.classList.contains('dm-section-parallax')){
