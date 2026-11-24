@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Organic Motion
  * Description: Lightweight, accessible scroll-triggered motion effects for WPBakery / Impreza and regular WordPress content.
- * Version: 1.0.6
+ * Version: 1.0.7
  * Plugin URI: https://anelli.studio/
  * Requires PHP: 7.4
  * Author: Anelli Studio
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) { exit; }
 
 final class FERM_Motion {
     const OPTION = 'ferm_motion_settings';
-    const VERSION = '1.0.6';
+    const VERSION = '1.0.7';
 
     public static function defaults() {
         return array('duration'=>900, 'distance'=>36, 'stagger'=>120, 'parallax'=>60, 'image_parallax'=>35, 'image_parallax_radius'=>0, 'background_parallax'=>45, 'background_overscan'=>8, 'section_parallax'=>20, 'parallax_easing'=>'soft', 'image_easing'=>'soft', 'background_easing'=>'soft', 'section_easing'=>'soft', 'scroll_enabled'=>0, 'scroll_smoothing'=>10, 'scroll_wheel'=>85, 'scroll_focus'=>'off', 'image_trigger'=>45, 'text_trigger'=>95, 'once'=>1, 'enabled'=>1, 'color_enabled'=>1, 'color_position'=>55, 'color_softness'=>'balanced', 'color_start'=>80, 'color_end'=>20, 'color_easing'=> 'smooth', 'color_cream'=>'#F8F4EC', 'color_orange'=>'#F16A37', 'color_green'=>'#507568', 'color_pink'=>'#DD8EB9', 'color_ink'=>'#25231F', 'header_enabled'=>0, 'header_mode'=>'transparent', 'header_contrast'=>'auto', 'header_selector'=>'.l-header', 'header_mono_logo'=>0, 'header_easing'=>'follow');
@@ -37,7 +37,12 @@ final class FERM_Motion {
         if (!empty($settings['scroll_enabled'])) {
             wp_enqueue_script('ferm-lenis', 'https://cdn.jsdelivr.net/npm/lenis@1.3.27/dist/lenis.min.js', array(), '1.3.27', true);
         }
-        wp_enqueue_script('ferm-motion', plugin_dir_url(__FILE__) . 'motion.js', !empty($settings['scroll_enabled']) ? array('ferm-lenis') : array(), self::VERSION, true);
+        wp_register_script('ferm-simplex-noise', plugin_dir_url(__FILE__) . 'simplex-noise.js', array(), '4.0.3', true);
+        $dependencies = array('ferm-simplex-noise');
+        if (!empty($settings['scroll_enabled'])) {
+            $dependencies[] = 'ferm-lenis';
+        }
+        wp_enqueue_script('ferm-motion', plugin_dir_url(__FILE__) . 'motion.js', $dependencies, self::VERSION, true);
         $config = array(
             'duration' => (int) $settings['duration'],
             'distance' => (int) $settings['distance'],
@@ -217,7 +222,7 @@ final class FERM_Motion {
             <?php self::field('image_parallax','Image parallax',0,150,'px');self::field('image_parallax_radius','Image parallax corner radius',0,200,'px (0 uses the existing image styling)');self::ease_field('image_easing','Image easing');self::field('background_parallax','Background-image parallax',0,150,'px');self::ease_field('background_easing','Background easing');self::field('background_overscan','Background photo overscan',0,30,'% (0 = exact sizing; higher = fewer exposed edges)');self::field('section_parallax','Section-content parallax',0,80,'px');self::ease_field('section_easing','Section easing');self::field('parallax','Legacy graphic parallax',0,150,'px');self::ease_field('parallax_easing','Graphic easing'); ?>
             </tbody></table>
             <p class="dm-tip">Easing makes the visual element catch up with the scroll. It does not slow or block the page itself. Direct follows immediately; Soft and Cinematic add progressively more inertia.</p>
-            <p><code>dm-image-parallax</code> on a single image; <code>dm-bg-parallax</code> on a photo row; <code>dm-section-parallax</code> on a content row; <code>dm-float</code> on an individual illustration.</p>
+            <p><code>dm-image-parallax</code> on a single image, or <code>dm-organic-parallax</code> for subtle zoom and drift; <code>dm-bg-parallax</code> on a photo row; <code>dm-section-parallax</code> on a content row; <code>dm-float</code> on an individual illustration.</p>
           </div>
           <div role="tabpanel" id="dm-panel-colours" class="dm-panel" aria-labelledby="dm-tab-colours">
             <h2>Scroll colour flow</h2><p class="description">Two simple controls: where colours change, and how gently. No scroll speed modification or section translation.</p>

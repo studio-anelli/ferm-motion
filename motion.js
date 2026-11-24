@@ -186,10 +186,14 @@
       if(isSection(el))el.classList.add('dm-section-parallax');
       else if(el.matches('.wpb_single_image,.w-image,figure')||el.querySelector('img'))el.classList.add('dm-image-parallax');
     }
+    if(el.classList.contains('dm-organic-parallax'))el.classList.add('dm-image-parallax');
     if(el.classList.contains('dm-image-parallax')){
       var pic=el.matches('img')?el:el.querySelector('img');
       if(!pic)return false;
       el._dmImage=pic;
+      if(el.classList.contains('dm-organic-parallax') && organicNoise){
+        el._dmOrganicSeed = ++organicImages * 13.71;
+      }
       // The wrapper (not row) acts as the clipping frame.
       if(pic!==el){
         const imageBounds = pic.getBoundingClientRect();
@@ -247,7 +251,7 @@
   }
   function init(root){
     if(!root||!root.querySelectorAll)return;
-    var selector='.dm-reveal,.dm-lines,.dm-words,.dm-stagger,.dm-image,.dm-parallax,.dm-image-parallax,.dm-section-parallax,.dm-float,.dm-bg-reveal,.dm-bg-parallax';
+    var selector='.dm-reveal,.dm-lines,.dm-words,.dm-stagger,.dm-image,.dm-parallax,.dm-image-parallax,.dm-organic-parallax,.dm-section-parallax,.dm-float,.dm-bg-reveal,.dm-bg-parallax';
     var elements=Array.from(root.querySelectorAll(selector));if(root.matches&&root.matches(selector))elements.unshift(root);
     elements.forEach(function(el){
       if(observed.has(el))return;observed.add(el);stats.initialized++;
@@ -260,7 +264,7 @@
       if(el.matches('.dm-bg-reveal,.dm-bg-parallax')){
         if(!prepareBackground(el)){el.classList.remove('dm-bg-reveal','dm-bg-parallax');}
       }
-      if(el.matches('.dm-parallax,.dm-image-parallax,.dm-section-parallax,.dm-bg-parallax')){
+      if(el.matches('.dm-parallax,.dm-image-parallax,.dm-organic-parallax,.dm-section-parallax,.dm-bg-parallax')){
         if(prepareParallax(el)){parallax.add(el);stats.parallax++;if(el.classList.contains('dm-bg-parallax'))stats.backgroundParallax++;}
       }
       if(reduceMotion){reveal(el);return;}
@@ -379,7 +383,15 @@
     var preset=(cfg.easing&&cfg.easing[mode])||'soft';
     return preset==='direct'?1:preset==='cinematic'?.075:.18;
   }
-  function applyParallax(el,mode,y,travel){
+  let seed = 314159;
+  const organicNoise = window.OrganicMotionNoise?.createNoise2D(() => {
+    seed = (Math.imul(seed,1664525) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  });
+  let organicImages = 0;
+  const organicProgress = new WeakMap();
+
+  function applyParallax(el,mode,y,travel,progress){
     var previous=easedOffsets.get(el);
     var factor=easingAmount(mode);
     var value=previous===undefined?y:previous+(y-previous)*factor;
@@ -397,7 +409,25 @@
     } else if(mode==='image'){
       if(el._dmImage){
         var imageHeight=Math.max(1,el.getBoundingClientRect().height);
-        el.style.setProperty('--dm-parallax-scale',String(1+(travel+28)/imageHeight));
+        var scale=1+(travel+28)/imageHeight;
+        if(el._dmOrganicSeed){
+          const previousProgress = organicProgress.get(el) ?? progress;
+          const difference = progress-previousProgress;
+          const position = Math.abs(difference)<.001 ? progress : previousProgress+difference*Math.min(factor,.18);
+          organicProgress.set(el,position);
+          if(position!==progress)easingActive=true;
+
+          const sample = position*1.35;
+          const seed = el._dmOrganicSeed;
+          const x = organicNoise(sample,seed)*7;
+          value += organicNoise(sample,seed+4)*6;
+          const zoom = (1+organicNoise(sample,seed+8))*.014;
+          const width = Math.max(1,el._dmImage.offsetWidth);
+          const height = Math.max(1,el._dmImage.offsetHeight);
+          scale = Math.max(scale,1+2*(Math.abs(x)+1)/width,1+2*(Math.abs(value)+1)/height)+zoom;
+          el.style.setProperty('--dm-x',x.toFixed(2)+'px');
+        }
+        el.style.setProperty('--dm-parallax-scale',String(scale));
         el.style.setProperty('--dm-y',value.toFixed(2)+'px');
       }
     } else el.style.setProperty('--dm-y',value.toFixed(2)+'px');
@@ -415,7 +445,7 @@
       // Maximum motion is half the configured travel, centered around 0.
       var y=(progress-.5)*travel;
       if(mode==='section')y*=Math.sin(Math.PI*progress);
-      applyParallax(el,mode,y,travel);
+      applyParallax(el,mode,y,travel,progress);
     });
     if(easingActive)schedule();
   }

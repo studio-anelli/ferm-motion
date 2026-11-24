@@ -20,7 +20,7 @@
 .dm-image-parallax{overflow:clip}
 .dm-image-parallax .dm-parallax-picture,
 .dm-image-parallax.dm-image img.dm-parallax-picture{
-  transform:translate3d(0,var(--dm-y,0px),0) scale(var(--dm-parallax-scale,1.12));
+  transform:translate3d(var(--dm-x,0px),var(--dm-y,0px),0) scale(var(--dm-parallax-scale,1.12));
   transform-origin:50% 50%;will-change:transform;
 }
 /* Move only the content shell, and return to zero movement at section boundaries. */
