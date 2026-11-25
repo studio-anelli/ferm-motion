@@ -21,12 +21,28 @@
 @media(max-width:720px){.ferm-opstellingen figcaption{display:flex}.ferm-opstellingen{grid-template-columns:1fr}.fo-photo{aspect-ratio:4/3}.fo-choice{padding-block:10px}}
 @media(prefers-reduced-motion:reduce){.ferm-opstellingen img,.fo-arrow span,.fo-list.is-ready .fo-selection{transition:none}}
 
-.ferm-opstellingen.fo-full{grid-template-columns:minmax(0,1fr)}
-.ferm-opstellingen.fo-full .fo-photo{aspect-ratio:16/9}
 .ferm-opstellingen .fo-controls{min-width:0}
 .ferm-opstellingen .fo-choice span:last-child{text-align:right}
 @media(min-width:721px){
   .ferm-opstellingen.fo-text-left{grid-template-columns:minmax(0,var(--fo-text)) minmax(0,var(--fo-image))}
   .ferm-opstellingen.fo-text-left figure{grid-column:2;grid-row:1}
   .ferm-opstellingen.fo-text-left .fo-controls{grid-column:1;grid-row:1}
+}
+
+.ferm-opstellingen .fo-choice span:first-child {
+  font-family:var(--fo-title-font-family,inherit);
+  font-size:var(--fo-title-font-size,clamp(16px,1.7vw,23px));
+  font-weight:var(--fo-title-font-weight,inherit);
+  font-style:var(--fo-title-font-style,inherit);
+  line-height:var(--fo-title-line-height,inherit);
+  letter-spacing:var(--fo-title-letter-spacing,-.04em);
+  text-transform:var(--fo-title-text-transform,inherit);
+}
+.ferm-opstellingen.fo-full figure{margin-left:calc(-1 * var(--fo-left-gutter,0px))}
+@media(min-width:721px){
+  .ferm-opstellingen.fo-full.fo-text-left figure{margin-left:0;margin-right:calc(-1 * var(--fo-right-gutter,0px))}
+}
+@media(max-width:720px){
+  .ferm-opstellingen.fo-full figure{margin-right:calc(-1 * var(--fo-right-gutter,0px))}
+  .ferm-opstellingen.fo-full figcaption{padding-inline:12px}
 }

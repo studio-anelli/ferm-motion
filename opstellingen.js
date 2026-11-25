@@ -91,6 +91,17 @@
       start=null;
       if(Math.abs(dx)>42&&Math.abs(dx)>Math.abs(dy))step(dx<0?1:-1);
     });
+    if(root.classList.contains('fo-full')){
+      const updateGutters=()=>{
+        const bounds=root.getBoundingClientRect();
+        const width=document.documentElement.clientWidth;
+        root.style.setProperty('--fo-left-gutter',Math.max(0,bounds.left)+'px');
+        root.style.setProperty('--fo-right-gutter',Math.max(0,width-bounds.right)+'px');
+      };
+      updateGutters();
+      window.addEventListener('resize',updateGutters,{passive:true});
+      if('ResizeObserver' in window)new ResizeObserver(updateGutters).observe(root);
+    }
     show(0);
     if('ResizeObserver' in window){
       const observer=new ResizeObserver(positionSelection);

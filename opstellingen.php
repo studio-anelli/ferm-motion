@@ -4,12 +4,13 @@ if (!defined('ABSPATH')) { exit; }
 function ferm_opstellingen_fields() {
     return array(
         'dropdown_style' => array('textfield', 'Impreza field style', '', 'Leave blank for the theme default, or enter the style number (for example 2 or 3).'),
-        'font' => array('textfield', 'Font family', '', 'Leave blank to inherit the theme font. Use the name of a font already loaded on the site.'),
+        'text_style' => array('dropdown', 'Impreza setup name style', array('Component default' => 'default', 'Body text' => 'body', 'Heading 1' => 'h1', 'Heading 2' => 'h2', 'Heading 3' => 'h3', 'Heading 4' => 'h4', 'Heading 5' => 'h5', 'Heading 6' => 'h6'), 'Uses the typography saved in Impreza. Capacity labels use body text.'),
+        'font' => array('textfield', 'Font family override', '', 'Optional. Leave blank to use Impreza typography.'),
         'text_side' => array('dropdown', 'Text side', array('Right' => 'right', 'Left' => 'left'), 'Sets the position of the setup list on desktop.'),
         'hover_color' => array('colorpicker', 'Hover colour', '#263723', ''),
         'active_color' => array('colorpicker', 'Active colour', '#263723', ''),
         'radius' => array('textfield', 'Image corner radius', '12', 'Pixels. Use 0 for square corners.'),
-        'image_layout' => array('dropdown', 'Image layout', array('Side by side' => 'split', 'Full width' => 'full'), 'Full width places the setup list below the photo.'),
+        'image_layout' => array('dropdown', 'Image layout', array('Side by side' => 'split', 'Full width on image side' => 'full'), 'Extends the photo to the viewport edge on its side and keeps the list alongside on desktop.'),
         'image_width' => array('textfield', 'Image column width', '57', 'Percentage of the available column space. The text column takes the remainder.'),
     );
 }
@@ -44,9 +45,6 @@ add_action('vc_before_init', function () {
         list($type, $label, $value, $description) = $field;
         $param = array('type' => $type, 'heading' => $label, 'param_name' => $key, 'value' => $value, 'description' => $description);
         if (isset($field[4])) { $param['group'] = $field[4]; }
-        if (in_array($key, array('text_side', 'image_width'), true)) {
-            $param['dependency'] = array('element' => 'image_layout', 'value' => 'split');
-        }
         $params[] = $param;
     }
     vc_map(array('name' => 'FERM Opstellingen', 'base' => 'ferm_opstellingen', 'category' => 'Organic Motion', 'params' => $params));
@@ -75,8 +73,15 @@ add_shortcode('ferm_opstellingen', function ($attributes) {
     $style = sprintf('--fo-active:%s;--fo-hover:%s;--fo-active-text:%s;--fo-hover-text:%s;--fo-radius:%dpx;--fo-image:%dfr;--fo-text:%dfr;',
         $active, $hover, ferm_opstellingen_text_color($active), ferm_opstellingen_text_color($hover),
         max(0, min(200, (int) $options['radius'])), $image_width, 100 - $image_width);
-    if ($font !== '' && preg_match('/^[\p{L}\p{N} ,\x22\x27_-]+$/u', $font)) { $style .= 'font-family:' . $font . ';'; }
-    $layout = $options['image_layout'] === 'full' ? ' fo-full' : ($options['text_side'] === 'left' ? ' fo-text-left' : '');
+    $text_style = $options['text_style'];
+    if (in_array($text_style, array('body', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'), true)) {
+        $prefix = $text_style === 'body' ? '' : $text_style . '-';
+        foreach (array('font-family', 'font-size', 'font-weight', 'font-style', 'line-height', 'letter-spacing', 'text-transform') as $property) {
+            $style .= '--fo-title-' . $property . ':var(--' . $prefix . $property . ');';
+        }
+    }
+    if ($font !== ''  && preg_match('/^[\p{L}\p{N} ,\x22\x27_-]+$/u', $font)) { $style .= 'font-family:' . $font . ';--fo-title-font-family:' . $font . ';'; }
+    $layout = ($options['image_layout'] === 'full' ? ' fo-full' : '') . ($options['text_side'] === 'left' ? ' fo-text-left' : '');
     $dropdown_style = absint($options['dropdown_style']);
     $field_class = $dropdown_style ? ' us-field-style_' . $dropdown_style : '';
     $base = trailingslashit(wp_get_upload_dir()["baseurl"]) . "2025/12/";
