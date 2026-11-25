@@ -184,9 +184,10 @@
       },{passive:true});
       track.addEventListener('touchcancel',()=>{dragging=false;current=target=normalScroll();wrap();ensure();},{passive:true});
     }
-    // Only vertical tracks share the page's wheel axis.
+    // Forward the wheel to the page when smooth scrolling is unavailable.
     if(vertical){
       track.addEventListener('wheel',event=>{
+        if(window.__fermLenis)return;
         if(event.defaultPrevented || !event.cancelable || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)return;
         if(!event.deltaY || Math.abs(event.deltaX)>Math.abs(event.deltaY))return;
         const mode=event.deltaMode;

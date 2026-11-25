@@ -500,7 +500,7 @@
       lenisInstance=new window.Lenis({
         lerp:lerp,wheelMultiplier:wheel,smoothWheel:true,syncTouch:false,autoRaf:false,
         prevent:function(node){
-          return !!(node && node.closest && node.closest('[data-lenis-prevent],.dm-slider--vertical,.wp-block-embed iframe,.modal,[role="dialog"]'));
+          return !!(node && node.closest && node.closest('[data-lenis-prevent],.wp-block-embed iframe,.modal,[role="dialog"]'));
         },
         virtualScroll:function(input){
           if(!input||!input.event)return true;
