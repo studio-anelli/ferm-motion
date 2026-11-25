@@ -13,11 +13,36 @@ function ferm_opstellingen_fields() {
     );
 }
 
+function ferm_opstellingen_defaults() {
+    return array(
+        array('Café-opstelling', '12–24 personen', 'ferm_schiedamde_plek_opstelling_encafe', 24),
+        array('Grote U-opstelling', '7–17 personen', '2-ferm_schiedamde_plek_opstelling_boardroom', 17),
+        array('Boardroom', '6–20 personen', 'ferm_schiedamde_plek_opstelling_werksessie', 20),
+        array('Workshop', '2–3 eilanden, tot 24 personen', 'ferm_schiedamde_plek_opstelling_workshop', 24),
+        array('Theateropstelling', 'Tot 36 personen', 'ferm_schiedamde_plek_opstelling_auditorium', 36),
+        array('Focusgroep', '8–18 personen', 'ferm_schiedamde_plek_opstelling_focusgroep', 18),
+    );
+}
+
+function ferm_opstellingen_content_fields() {
+    $fields = array();
+    foreach (ferm_opstellingen_defaults() as $i => $slide) {
+        $number = $i + 1;
+        $prefix = 'setup_' . $number . '_';
+        $fields[$prefix . 'image'] = array('attach_image', 'Photo', '', '', 'Opstelling ' . $number);
+        $fields[$prefix . 'name'] = array('textfield', 'Setup name', $slide[0], '', 'Opstelling ' . $number);
+        $fields[$prefix . 'text'] = array('textfield', 'Capacity text', $slide[1], '', 'Opstelling ' . $number);
+        $fields[$prefix . 'capacity'] = array('textfield', 'Maximum group size', (string) $slide[3], 'Number used by the group-size filter.', 'Opstelling ' . $number);
+    }
+    return $fields;
+}
+
 add_action('vc_before_init', function () {
     $params = array();
-    foreach (ferm_opstellingen_fields() as $key => $field) {
+    foreach (array_merge(ferm_opstellingen_fields(), ferm_opstellingen_content_fields()) as $key => $field) {
         list($type, $label, $value, $description) = $field;
         $param = array('type' => $type, 'heading' => $label, 'param_name' => $key, 'value' => $value, 'description' => $description);
+        if (isset($field[4])) { $param['group'] = $field[4]; }
         if (in_array($key, array('text_side', 'image_width'), true)) {
             $param['dependency'] = array('element' => 'image_layout', 'value' => 'split');
         }
@@ -38,7 +63,7 @@ function ferm_opstellingen_text_color($hex) {
 
 add_shortcode('ferm_opstellingen', function ($attributes) {
     $defaults = array();
-    foreach (ferm_opstellingen_fields() as $key => $field) {
+    foreach (array_merge(ferm_opstellingen_fields(), ferm_opstellingen_content_fields()) as $key => $field) {
         $defaults[$key] = is_array($field[2]) ? reset($field[2]) : $field[2];
     }
     $options = shortcode_atts($defaults, $attributes, 'ferm_opstellingen');
@@ -52,16 +77,17 @@ add_shortcode('ferm_opstellingen', function ($attributes) {
     if ($font !== '' && preg_match('/^[\p{L}\p{N} ,\x22\x27_-]+$/u', $font)) { $style .= 'font-family:' . $font . ';'; }
     $layout = $options['image_layout'] === 'full' ? ' fo-full' : ($options['text_side'] === 'left' ? ' fo-text-left' : '');
     $base = trailingslashit(wp_get_upload_dir()["baseurl"]) . "2025/12/";
-    $slides = array(
-        array('Café-opstelling', '12–24 personen', 'ferm_schiedamde_plek_opstelling_encafe', 24),
-        array('Grote U-opstelling', '7–17 personen', '2-ferm_schiedamde_plek_opstelling_boardroom', 17),
-        array('Boardroom', '6–20 personen', 'ferm_schiedamde_plek_opstelling_werksessie', 20),
-        array('Workshop', '2–3 eilanden, tot 24 personen', 'ferm_schiedamde_plek_opstelling_workshop', 24),
-        array('Theateropstelling', 'Tot 36 personen', 'ferm_schiedamde_plek_opstelling_auditorium', 36),
-        array('Focusgroep', '8–18 personen', 'ferm_schiedamde_plek_opstelling_focusgroep', 18),
-    );
-    foreach ($slides as &$slide) { $slide[2] = $base . $slide[2] . '-1024x1024.jpg'; }
-    unset($slide);
+    $slides = array();
+    foreach (ferm_opstellingen_defaults() as $i => $slide) {
+        $prefix = 'setup_' . ($i + 1) . '_';
+        $image = wp_get_attachment_image_url(absint($options[$prefix . 'image']), 'large');
+        $slides[] = array(
+            sanitize_text_field($options[$prefix . 'name']),
+            sanitize_text_field($options[$prefix . 'text']),
+            $image ?: $base . $slide[2] . '-1024x1024.jpg',
+            max(1, (int) $options[$prefix . 'capacity']),
+        );
+    }
     wp_enqueue_style('ferm-opstellingen', plugin_dir_url(__FILE__) . 'opstellingen.css', array(), FERM_Motion::VERSION);
     wp_enqueue_script('ferm-opstellingen', plugin_dir_url(__FILE__) . 'opstellingen.js', array(), FERM_Motion::VERSION, true);
     ob_start();
@@ -79,10 +105,11 @@ add_shortcode('ferm_opstellingen', function ($attributes) {
             <div class="fo-filters"><label>Groepsgrootte
                 <select class="fo-group-size">
                     <option value="">Alle opstellingen</option>
-                    <option value="12">Tot 12 personen</option>
-                    <option value="18">13–18 personen</option>
-                    <option value="24">19–24 personen</option>
-                    <option value="36">25–36 personen</option>
+                    <?php foreach (array(12 => 'Tot 12 personen', 18 => '13–18 personen', 24 => '19–24 personen', 36 => '25–36 personen') as $limit => $label) : ?>
+                        <?php if ($limit <= max(array_column($slides, 3))) : ?>
+                            <option value="<?php echo esc_attr($limit); ?>"><?php echo esc_html($label); ?></option>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
                 </select>
             </label></div>
             <div class="fo-list" role="group" aria-label="Kies een opstelling"><div class="fo-selection" aria-hidden="true"></div></div>
