@@ -22,16 +22,13 @@
     const axisSize=()=>vertical?track.clientHeight:track.clientWidth;
     const reduce=reduced();
     const looping=!!opt.loop&&!reduce&&originals.length>1;
-    const autoplay=!!opt.autoplay&&!reduce&&originals.length>1;
     const dragAllowed=opt.allowDrag!==false;
     const mode=reduce?'off':(opt.scrollResponse||'off');
     const strength=clamp(Number(opt.scrollStrength)||0,0,150)/100;
     const scrollDriven=mode!=='off'&&strength>0&&originals.length>1;
     const response=clamp((100-(Number(opt.smoothness)||72))/100,0.04,0.55);
-    const speed=clamp(Number(opt.autoplaySpeed)||25,3,160);
-    const hoverPause=!!opt.pauseHover;
     let period=0,base=0,target=0,current=0,frame=0,lastTick=0;
-    let pendingScroll=0,dragging=false,dragOrigin=0,dragScroll=0,hold=false;
+    let pendingScroll=0,dragging=false,dragOrigin=0,dragScroll=0;
     let scrollY=window.scrollY,scrollTime=performance.now();
     let suppressClick=false;
     let visible=inViewport();
@@ -39,16 +36,15 @@
       new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;}).observe(root);
     }
     const children=()=>Array.from(list.children);
-    const clones=[];
+    let navigationTarget=null;
     if(looping){
       // Clones on BOTH sides guarantee that dragging in either direction is continuous.
       // The middle set is the canonical one; when scrolling crosses the boundary,
       // both the visual position and its target are shifted by one complete period.
-      for(const item of originals){const clone=item.cloneNode(true);clone.dataset.dmClone='1';clone.setAttribute('aria-hidden','true');clone.querySelectorAll('a,button,input,[tabindex]').forEach(el=>el.tabIndex=-1);list.insertBefore(clone,originals[0]);clones.push(clone);}
-      for(const item of originals){const clone=item.cloneNode(true);clone.dataset.dmClone='1';clone.setAttribute('aria-hidden','true');clone.querySelectorAll('a,button,input,[tabindex]').forEach(el=>el.tabIndex=-1);list.appendChild(clone);clones.push(clone);}
+      for(const item of originals){const clone=item.cloneNode(true);clone.dataset.dmClone='1';clone.setAttribute('aria-hidden','true');clone.querySelectorAll('a,button,input,[tabindex]').forEach(el=>el.tabIndex=-1);list.insertBefore(clone,originals[0]);}
+      for(const item of originals){const clone=item.cloneNode(true);clone.dataset.dmClone='1';clone.setAttribute('aria-hidden','true');clone.querySelectorAll('a,button,input,[tabindex]').forEach(el=>el.tabIndex=-1);list.appendChild(clone);}
     }
     root.classList.toggle('dm-slider--loop',looping);
-    root.classList.toggle('dm-slider--autoplay',autoplay);
     root.classList.toggle('dm-slider--no-drag',!dragAllowed);
     root.classList.toggle('dm-slider--scroll-driven',scrollDriven);
     root.classList.toggle('dm-slider--drift',!!opt.imageDrift&&!reduce);
@@ -58,18 +54,27 @@
     track.tabIndex=0;
     function offset(el){return vertical?el.offsetTop:el.offsetLeft;}
     function extent(el){return vertical?el.offsetHeight:el.offsetWidth;}
+    function centre(slide){return offset(slide)+(extent(slide)-axisSize())/2;}
+    const navigable=originals.length>1;
+    root.classList.toggle('dm-slider--navigable',navigable);
+    function padEdges(){
+      if(!navigable||looping)return;
+      list.style.setProperty('--dm-nav-start',Math.max(0,(axisSize()-extent(originals[0]))/2)+'px');
+      list.style.setProperty('--dm-nav-end',Math.max(0,(axisSize()-extent(originals[originals.length-1]))/2)+'px');
+    }
     function layout(reset){
+      padEdges();
       if(looping){
         // Distance from the middle first slide to the third (cloned) first slide.
         period=Math.max(1,offset(children()[originals.length*2])-offset(children()[originals.length]));
         base=offset(children()[originals.length]);
-        if(reset){current=target=base;writeScroll(base);}
+        if(reset){current=target=Math.max(0,centre(originals[0]));writeScroll(current);}
         else {
           const previousRelative=current-base;
           if(Math.abs(previousRelative)>period*1.5){current=target=base;writeScroll(base);}
           else wrap();
         }
-      } else if(reset){current=target=normalScroll();}
+      } else if(reset){current=target=navigable?Math.max(0,centre(originals[0])):normalScroll();writeScroll(current);}
       applyDrift();
     }
     function wrap(){
@@ -95,14 +100,13 @@
       const onscreen=typeof IntersectionObserver==='function'?visible:inViewport();
       if(document.hidden||!onscreen){
         pendingScroll=0;
-        if(autoplay||scrollDriven||looping)frame=requestAnimationFrame(tick);
+        if(scrollDriven||looping)frame=requestAnimationFrame(tick);
         else{current=target=normalScroll();frame=0;lastTick=0;}
         return;
       }
       // Scroll impulse is transient. The base velocity survives and resumes.
       const active=!dragging;
-      if(active&&autoplay&&(!hoverPause||!hold))target+=speed*dt;
-      if(active&&scrollDriven){
+      if(active&&scrollDriven&&navigationTarget===null){
         const step=pendingScroll*(1-Math.exp(-dt*9));
         target+=step;
         pendingScroll-=step;
@@ -115,24 +119,29 @@
         if(Math.abs(current-target)<0.02)current=target;
         wrap();writeScroll(current);applyDrift();
       }
-      if(autoplay||scrollDriven||looping||Math.abs(current-target)>0.1)frame=requestAnimationFrame(tick);
+      if(navigationTarget!==null && Math.abs(current-target)<=.1){
+        current=target;
+        writeScroll(current);
+        stopNavigation();
+      }
+      if(scrollDriven||looping||Math.abs(current-target)>0.1)frame=requestAnimationFrame(tick);
       else{frame=0;lastTick=0;}
     }
     function ensure(){if(!frame){lastTick=0;frame=requestAnimationFrame(tick);}}
     function onPageScroll(){
       const next=window.scrollY,now=performance.now(),dy=next-scrollY,dt=Math.max(8,now-scrollTime);
       scrollY=next;scrollTime=now;
-      if(!dy||dragging||!(typeof IntersectionObserver==='function'?visible:inViewport()))return;
+      if(!dy||dragging||navigationTarget!==null||!(typeof IntersectionObserver==='function'?visible:inViewport()))return;
       const velocity=Math.abs(dy)/dt*1000;
       const acceleration=mode==='dynamic'?1+Math.min(.6,velocity/2500):1;
       pendingScroll=clamp(pendingScroll+dy*strength*acceleration*2.4,-220,220);
       ensure();
     }
     if(scrollDriven)window.addEventListener('scroll',onPageScroll,{passive:true});
-    if(hoverPause){root.addEventListener('mouseenter',()=>hold=true);root.addEventListener('mouseleave',()=>hold=false);}
     if(dragAllowed){
       track.addEventListener('pointerdown',e=>{
         if(e.pointerType!=='mouse'||e.button!==0)return;
+        stopNavigation();pendingScroll=0;
         dragging=true;dragOrigin=vertical?e.clientY:e.clientX;dragScroll=current;
         track.classList.add('dm-slider-dragging');
       });
@@ -148,7 +157,7 @@
       });
       track.addEventListener('click',e=>{if(suppressClick){e.preventDefault();e.stopPropagation();}},true);
       // Let touch gestures scroll the filmstrip naturally, without RAF fighting touch.
-      track.addEventListener('touchstart',()=>{dragging=true;},{passive:true});
+      track.addEventListener('touchstart',()=>{stopNavigation();pendingScroll=0;dragging=true;},{passive:true});
       track.addEventListener('touchend',()=>{
         current=target=normalScroll();wrap();dragging=false;ensure();
       },{passive:true});
@@ -168,21 +177,57 @@
     track.addEventListener('scroll',()=>{
       if(dragging)return;
       const position=normalScroll();
-      // Let native trackpad scrolling set the starting point for horizontal autoplay.
-      if(!frame || (!vertical && autoplay && Math.abs(position-lastWrittenScroll)>.5)){
+      if(!frame || Math.abs(position-lastWrittenScroll)>.5){
+        stopNavigation();
         current=target=position;
         lastWrittenScroll=position;
         wrap();applyDrift();
       }
     },{passive:true});
+    function stopNavigation(){
+      navigationTarget=null;
+      root.classList.remove('dm-slider--navigating');
+    }
+    function navigate(direction){
+      if(!navigable||dragging)return;
+      const reference=navigationTarget===null?normalScroll():target;
+      const slides=children();
+      const nearest=slides.reduce((best,slide,i)=>
+        Math.abs(centre(slide)-reference)<Math.abs(centre(slides[best])-reference)?i:best,0);
+      const nextSlide=slides[nearest+direction];
+      if(!nextSlide){
+        if(navigationTarget!==null || Math.abs(centre(slides[nearest])-reference)<1)return;
+      }
+      const destination=nextSlide || slides[nearest];
+      pendingScroll=0;
+      target=clamp(centre(destination),0,Math.max(0,travel()));
+      navigationTarget=destination;
+      root.classList.add('dm-slider--navigating');
+      if(reduce){
+        current=target;
+        writeScroll(current);
+        stopNavigation();
+      }else ensure();
+    }
+    if(navigable){
+      for(const direction of [-1,1]){
+        const button=document.createElement('button');
+        button.type='button';
+        button.className='dm-slider-arrow '+(direction<0?'is-prev':'is-next');
+        button.setAttribute('aria-label',direction<0?'Vorige foto':'Volgende foto');
+        const icon=document.createElement('span');
+        icon.setAttribute('aria-hidden','true');
+        button.append(icon);
+        button.addEventListener('click',()=>navigate(direction));
+        root.append(button);
+      }
+    }
     track.addEventListener('keydown',e=>{
-      const forward=(e.key==='ArrowRight'&&!vertical)||(e.key==='ArrowDown'&&vertical);
-      const reverse=(e.key==='ArrowLeft'&&!vertical)||(e.key==='ArrowUp'&&vertical);
-      if(!forward&&!reverse)return;
+      const forward=vertical?'ArrowDown':'ArrowRight';
+      const reverse=vertical?'ArrowUp':'ArrowLeft';
+      if(e.key!==forward&&e.key!==reverse)return;
       e.preventDefault();
-      target+=(forward?1:-1)*axisSize()*.7;
-      if(!looping)target=clamp(target,0,Math.max(0,travel()));
-      ensure();
+      navigate(e.key===forward?1:-1);
     });
     layout(true);
     if(typeof ResizeObserver==='function'){
@@ -190,9 +235,10 @@
         const prior=looping&&period?(current-base)/period:0;
         layout(false);
         if(looping){current=target=base+prior*period;wrap();writeScroll(current);}
+        if(navigationTarget!==null){target=clamp(centre(navigationTarget),0,Math.max(0,travel()));ensure();}
       });ro.observe(track);
     }
-    if(autoplay||scrollDriven||looping)ensure();
+    if(scrollDriven||looping)ensure();
   }
   function boot(){document.querySelectorAll('.dm-slider[data-dm-slider]').forEach(init);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();

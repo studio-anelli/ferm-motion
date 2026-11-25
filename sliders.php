@@ -26,7 +26,7 @@ final class FERM_Motion_Sliders {
         ));
     }
     public static function defaults() {
-        return array('ids'=>array(), 'layout'=>'editorial','ratio'=>'16/9','fit'=>'cover','position'=>'50% 50%','gap'=>18,'peek'=>16,'speed'=>650,'loop'=>0,'autoplay'=>0,'arrows'=>0,'captions'=>0,'direction'=>'horizontal','scroll_response'=>'off','scroll_strength'=>60,'smoothness'=>72,'viewport_height'=>76,'vertical_slide_height'=>64,'natural_gallery_height'=>0,'image_drift'=>1,'autoplay_speed'=>25,'pause_hover'=>0,'allow_drag'=>1,'container_radius'=>0,'image_radius'=>0);
+        return array('ids'=>array(), 'layout'=>'editorial','ratio'=>'16/9','fit'=>'cover','position'=>'50% 50%','gap'=>18,'peek'=>16,'speed'=>650,'loop'=>0,'captions'=>0,'direction'=>'horizontal','scroll_response'=>'off','scroll_strength'=>60,'smoothness'=>72,'viewport_height'=>76,'vertical_slide_height'=>64,'natural_gallery_height'=>0,'image_drift'=>1,'allow_drag'=>1,'container_radius'=>0,'image_radius'=>0);
     }
     public static function settings($id) {
         $value=get_post_meta($id,self::META,true);
@@ -54,7 +54,6 @@ final class FERM_Motion_Sliders {
         self::select('layout','Composition',array('editorial'=>'Editorial: one dominant image','gallery'=>'Gallery: multiple images'),$s);
         self::select('fit','Image fit',array('cover'=>'Cover','contain'=>'Contain'),$s);
         self::select('position','Focal point',array('50% 50%'=>'Center','50% 25%'=>'Top','50% 75%'=>'Bottom','25% 50%'=>'Left','75% 50%'=>'Right'),$s);
-        self::checkbox('pause_hover','Pause autoplay while hovering',$s);
         echo '</div><h3>Corner styling</h3><div class="dm-slider-controls">';
         self::integer('container_radius','Container border radius (px)',0,200,$s);
         self::integer('image_radius','Image border radius (px)',0,200,$s);
@@ -71,8 +70,6 @@ final class FERM_Motion_Sliders {
         self::integer('natural_gallery_height','Horizontal photo height (vh, 0 = Auto)',0,100,$s);
         self::integer('vertical_slide_height','Vertical photo height (vh)',25,100,$s);
         echo '</div><h3>Playback & interaction</h3><div class="dm-slider-controls">';
-        self::checkbox('autoplay','Continuous autoplay',$s);
-        self::integer('autoplay_speed','Autoplay speed (px / second)',3,160,$s);
         self::checkbox('loop','Seamless infinite loop',$s);
         self::checkbox('allow_drag','Allow mouse dragging / touch swiping',$s);
         self::checkbox('image_drift','Subtle cinematic image movement',$s);
@@ -98,8 +95,8 @@ final class FERM_Motion_Sliders {
         $ids=array_values(array_unique(array_filter(array_map('absint',$ids),function($id){return $id>0 && wp_attachment_is_image($id);})));$ids=array_slice($ids,0,80);
         $d['ids']=$ids;
         foreach(array('layout'=>array('editorial','gallery'),'direction'=>array('horizontal','vertical'),'scroll_response'=>array('off','gentle','dynamic'),'ratio'=>array('16/9','4/3','1/1','3/2','auto'),'fit'=>array('cover','contain'),'position'=>array('50% 50%','50% 25%','50% 75%','25% 50%','75% 50%')) as $key=>$allowed){$v=$input[$key]??$d[$key];$d[$key]=in_array($v,$allowed,true)?$v:$d[$key];}
-        foreach(array('gap'=>array(0,60),'peek'=>array(5,35),'speed'=>array(200,1800),'scroll_strength'=>array(0,150),'smoothness'=>array(0,95),'viewport_height'=>array(35,100),'vertical_slide_height'=>array(25,100),'natural_gallery_height'=>array(0,100),'autoplay_speed'=>array(3,160),'container_radius'=>array(0,200),'image_radius'=>array(0,200)) as $key=>$bounds){$d[$key]=max($bounds[0],min($bounds[1],absint($input[$key]??$d[$key])));}
-        foreach(array('image_drift','captions','loop','autoplay','pause_hover','allow_drag') as $key)$d[$key]=!empty($input[$key])?1:0;
+        foreach(array('gap'=>array(0,60),'peek'=>array(5,35),'speed'=>array(200,1800),'scroll_strength'=>array(0,150),'smoothness'=>array(0,95),'viewport_height'=>array(35,100),'vertical_slide_height'=>array(25,100),'natural_gallery_height'=>array(0,100),'container_radius'=>array(0,200),'image_radius'=>array(0,200)) as $key=>$bounds){$d[$key]=max($bounds[0],min($bounds[1],absint($input[$key]??$d[$key])));}
+        foreach(array('image_drift','captions','loop','allow_drag') as $key)$d[$key]=!empty($input[$key])?1:0;
         update_post_meta($post_id,self::META,$d);
     }
     public static function frontend_assets() {
@@ -127,7 +124,7 @@ final class FERM_Motion_Sliders {
             $found++;
         }
         if(!$found)return '';
-        $params=array('layout'=>$s['layout'],'gap'=>(int)$s['gap'],'peek'=>(int)$s['peek'],'speed'=>(int)$s['speed'],'loop'=>!empty($s['loop']),'autoplay'=>!empty($s['autoplay']),'autoplaySpeed'=>(int)$s['autoplay_speed'],'pauseHover'=>!empty($s['pause_hover']),'allowDrag'=>!empty($s['allow_drag']),'direction'=>$s['direction'],'scrollResponse'=>$s['scroll_response'],'scrollStrength'=>(int)$s['scroll_strength'],'smoothness'=>(int)$s['smoothness'],'imageDrift'=>!$natural_gallery&&$s['fit']==='cover'&&!empty($s['image_drift']));
+        $params=array('layout'=>$s['layout'],'gap'=>(int)$s['gap'],'peek'=>(int)$s['peek'],'speed'=>(int)$s['speed'],'loop'=>!empty($s['loop']),'allowDrag'=>!empty($s['allow_drag']),'direction'=>$s['direction'],'scrollResponse'=>$s['scroll_response'],'scrollStrength'=>(int)$s['scroll_strength'],'smoothness'=>(int)$s['smoothness'],'imageDrift'=>!$natural_gallery&&$s['fit']==='cover'&&!empty($s['image_drift']));
         $classes='dm-slider dm-slider--'.$s['layout'].' dm-slider--'.$s['direction'].($natural_gallery?' dm-slider--natural-gallery':'');
         $styles='--dm-slider-container-radius:'.(int)$s['container_radius'].'px;--dm-slider-image-radius:'.(int)$s['image_radius'].'px;--dm-slider-gap:'.$s['gap'].'px;--dm-slider-ratio:'.($s['ratio']==='auto'?'auto':$s['ratio']).';--dm-slider-fit:'.$s['fit'].';--dm-slider-position:'.$s['position'].';--dm-slider-peek:'.$s['peek'].'%;--dm-slider-viewport-height:'.$s['viewport_height'].'svh;--dm-slider-vertical-slide-height:'.$s['vertical_slide_height'].'svh;';
         if($natural_gallery&&$s['natural_gallery_height']>0){

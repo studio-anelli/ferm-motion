@@ -81,21 +81,18 @@
    var horizontal = setting('direction').val() === 'horizontal';
    var original = setting('ratio').val() === 'auto';
    var naturalGallery = horizontal && layout === 'gallery' && original;
-   var autoplay = setting('autoplay').is(':checked');
    var fit = setting('fit').val();
 
 
    var visible = {
      fit: !naturalGallery,
      position: !horizontal || !original,
-     pause_hover: autoplay,
      ratio: horizontal,
      peek: horizontal && layout === 'editorial',
      viewport_height: !horizontal,
      vertical_slide_height: !horizontal,
      natural_gallery_height: naturalGallery,
      scroll_strength: setting('scroll_response').val() !== 'off',
-     autoplay_speed: autoplay,
      image_drift: !naturalGallery && fit === 'cover',
    };
    Object.keys(visible).forEach(function (key) {

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Organic Motion
  * Description: Lightweight, accessible scroll-triggered motion effects for WPBakery / Impreza and regular WordPress content.
- * Version: 1.0.21
+ * Version: 1.0.22
  * Plugin URI: https://anelli.studio/
  * Requires PHP: 7.4
  * Author: Anelli Studio
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) { exit; }
 
 final class FERM_Motion {
     const OPTION = 'ferm_motion_settings';
-    const VERSION = '1.0.21';
+    const VERSION = '1.0.22';
 
     public static function defaults() {
         return array('duration'=>900, 'distance'=>36, 'stagger'=>120, 'parallax_percent'=>12, 'image_parallax_percent'=>7, 'organic_travel_percent'=>7, 'organic_intensity'=>100, 'organic_easing'=>'editorial', 'image_parallax_radius'=>0, 'background_parallax_percent'=>9, 'background_overscan'=>8, 'section_parallax_percent'=>4, 'parallax_easing'=>'soft', 'image_easing'=>'soft', 'background_easing'=>'soft', 'section_easing'=>'soft', 'scroll_enabled'=>0, 'scroll_smoothing'=>10, 'scroll_wheel'=>85, 'scroll_focus'=>'off', 'image_trigger'=>45, 'text_trigger'=>95, 'once'=>1, 'enabled'=>1, 'color_enabled'=>1, 'color_position'=>55, 'color_softness'=>'balanced', 'color_start'=>80, 'color_end'=>20, 'color_easing'=> 'smooth', 'color_cream'=>'#F8F4EC', 'color_orange'=>'#F16A37', 'color_green'=>'#507568', 'color_pink'=>'#DD8EB9', 'color_ink'=>'#25231F', 'header_enabled'=>0, 'header_mode'=>'transparent', 'header_contrast'=>'auto', 'header_selector'=>'.l-header', 'header_mono_logo'=>0, 'header_easing'=>'follow');
@@ -290,7 +290,7 @@ final class FERM_Motion {
             <p>Create photographic sliders using images from the WordPress Media Library. Choose <strong>Editorial</strong> for one large image with a peek of the next, or <strong>Gallery</strong> for multiple images in a row.</p>
             <p><a class="button button-primary" href="<?php echo esc_url(admin_url('edit.php?post_type=ferm_slider')); ?>">Manage sliders</a> <a class="button" href="<?php echo esc_url(admin_url('post-new.php?post_type=ferm_slider')); ?>">Add new slider</a></p>
             <p class="dm-tip">Paste <code>[ferm_slider id="123"]</code> into a WPBakery Text Block (or Raw HTML element that processes shortcodes). The slider output is styled separately from motion classes, so no existing animations are affected.</p>
-            <p>Choose horizontal or vertical image flow, with optional page-scroll acceleration and easing. Autoplay, page-scroll influence and seamless looping can run together. Drag/swipe can be turned off for each slider. No visible arrows or counters.</p>
+            <p>Choose horizontal or vertical image flow, with optional page-scroll acceleration and easing. Arrows centre the next or previous photo. Page-scroll influence and seamless looping are optional. Drag/swipe can be turned off for each slider.</p>
           </div>
           <div role="tabpanel" id="dm-panel-scroll" class="dm-panel" aria-labelledby="dm-tab-scroll">
             <h2>Smooth scrolling · Lenis</h2>
