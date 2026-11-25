@@ -3,6 +3,7 @@ if (!defined('ABSPATH')) { exit; }
 
 function ferm_opstellingen_fields() {
     return array(
+        'dropdown_style' => array('textfield', 'Impreza field style', '', 'Leave blank for the theme default, or enter the style number (for example 2 or 3).'),
         'font' => array('textfield', 'Font family', '', 'Leave blank to inherit the theme font. Use the name of a font already loaded on the site.'),
         'text_side' => array('dropdown', 'Text side', array('Right' => 'right', 'Left' => 'left'), 'Sets the position of the setup list on desktop.'),
         'hover_color' => array('colorpicker', 'Hover colour', '#263723', ''),
@@ -76,6 +77,8 @@ add_shortcode('ferm_opstellingen', function ($attributes) {
         max(0, min(200, (int) $options['radius'])), $image_width, 100 - $image_width);
     if ($font !== '' && preg_match('/^[\p{L}\p{N} ,\x22\x27_-]+$/u', $font)) { $style .= 'font-family:' . $font . ';'; }
     $layout = $options['image_layout'] === 'full' ? ' fo-full' : ($options['text_side'] === 'left' ? ' fo-text-left' : '');
+    $dropdown_style = absint($options['dropdown_style']);
+    $field_class = $dropdown_style ? ' us-field-style_' . $dropdown_style : '';
     $base = trailingslashit(wp_get_upload_dir()["baseurl"]) . "2025/12/";
     $slides = array();
     foreach (ferm_opstellingen_defaults() as $i => $slide) {
@@ -102,15 +105,15 @@ add_shortcode('ferm_opstellingen', function ($attributes) {
             <figcaption aria-live="polite"><strong></strong><span></span></figcaption>
         </figure>
         <div class="fo-controls">
-            <div class="fo-filters"><label>Groepsgrootte
-                <select class="fo-group-size">
+            <div class="fo-filters"><label class="w-form-row for_select<?php echo esc_attr($field_class); ?>">Groepsgrootte
+                <span class="w-form-row-field"><select class="fo-group-size">
                     <option value="">Alle opstellingen</option>
                     <?php foreach (array(12 => 'Tot 12 personen', 18 => '13–18 personen', 24 => '19–24 personen', 36 => '25–36 personen') as $limit => $label) : ?>
                         <?php if ($limit <= max(array_column($slides, 3))) : ?>
                             <option value="<?php echo esc_attr($limit); ?>"><?php echo esc_html($label); ?></option>
                         <?php endif; ?>
                     <?php endforeach; ?>
-                </select>
+                </select></span>
             </label></div>
             <div class="fo-list" role="group" aria-label="Kies een opstelling"><div class="fo-selection" aria-hidden="true"></div></div>
         </div>
