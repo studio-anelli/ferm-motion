@@ -90,3 +90,9 @@
   .dm-slider--pointer:not(:has(button:focus-visible)) .dm-slider-pointer{display:grid;opacity:1;pointer-events:none}
   .dm-slider--pointer:not(:has(button:focus-visible)) .dm-slider-track{cursor:none}
 }
+
+/* Invert the pixels underneath the arrow, including changing photo tones. */
+@supports (mix-blend-mode:difference){
+  .dm-slider .dm-slider-arrow:not(:focus-visible){color:#fff;mix-blend-mode:difference}
+  .dm-slider .dm-slider-arrow:not(:focus-visible) span{filter:none}
+}

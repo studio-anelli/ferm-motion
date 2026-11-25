@@ -47,6 +47,9 @@
     }
     const children=()=>Array.from(list.children);
     let navigationTarget=null;
+    let navigationStart=0;
+    let navigationStartedAt=null;
+    const navigationDuration=780;
     if(looping){
       // Clones on BOTH sides guarantee that dragging in either direction is continuous.
       // The middle set is the canonical one; when scrolling crosses the boundary,
@@ -92,7 +95,7 @@
       let delta=0;
       while(current<base-period*.5){current+=period;delta+=period;}
       while(current>=base+period*.5){current-=period;delta-=period;}
-      if(delta){target+=delta;dragScroll+=delta;writeScroll(current);}
+      if(delta){target+=delta;dragScroll+=delta;navigationStart+=delta;writeScroll(current);}
     }
     function inViewport(){const b=root.getBoundingClientRect();return b.bottom>0&&b.top<window.innerHeight;}
     function applyDrift(){
@@ -124,13 +127,20 @@
         if(Math.abs(pendingScroll)<.05)pendingScroll=0;
       }
       if(!looping)target=clamp(target,0,Math.max(0,travel()));
-      if(!dragging&&current!==target){
-        const k=1-Math.pow(1-response,Math.max(0.01,dt*60));
-        current+=(target-current)*k;
-        if(Math.abs(current-target)<0.02)current=target;
+      if(!dragging&&(current!==target||navigationTarget!==null)){
+        if(navigationTarget!==null){
+          if(navigationStartedAt===null)navigationStartedAt=now;
+          const progress=clamp((now-navigationStartedAt)/navigationDuration,0,1);
+          const eased=progress*progress*progress*(progress*(progress*6-15)+10);
+          current=navigationStart+(target-navigationStart)*eased;
+        }else{
+          const k=1-Math.pow(1-response,Math.max(0.01,dt*60));
+          current+=(target-current)*k;
+        }
+        if(navigationTarget===null && Math.abs(current-target)<0.02)current=target;
         wrap();writeScroll(current);applyDrift();
       }
-      if(navigationTarget!==null && Math.abs(current-target)<=.1){
+      if(navigationTarget!==null && navigationStartedAt!==null && now-navigationStartedAt>=navigationDuration){
         current=target;
         writeScroll(current);
         stopNavigation();
@@ -213,6 +223,8 @@
       pendingScroll=0;
       target=clamp(centre(destination),0,Math.max(0,travel()));
       navigationTarget=destination;
+      navigationStart=current=normalScroll();
+      navigationStartedAt=null;
       root.classList.add('dm-slider--navigating');
       if(reduce){
         current=target;
@@ -282,7 +294,12 @@
         const prior=looping&&period?(current-base)/period:0;
         layout(false);
         if(looping){current=target=base+prior*period;wrap();writeScroll(current);}
-        if(navigationTarget!==null){target=clamp(centre(navigationTarget),0,Math.max(0,travel()));ensure();}
+        if(navigationTarget!==null){
+          target=clamp(centre(navigationTarget),0,Math.max(0,travel()));
+          navigationStart=current=normalScroll();
+          navigationStartedAt=null;
+          ensure();
+        }
       });ro.observe(track);
     }
   }
