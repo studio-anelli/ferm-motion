@@ -64,7 +64,7 @@
 .ferm-opstellingen .fo-arrow span::before {
   left: 0;
   right: 1px;
-  height: 2px;
+  height: 3px;
   background: currentColor;
   transform: translateY(-50%);
 }
@@ -72,8 +72,8 @@
   right: 2px;
   width: 11px;
   height: 11px;
-  border-top: 2px solid;
-  border-right: 2px solid;
+  border-top: 3px solid;
+  border-right: 3px solid;
   transform: translateY(-50%) rotate(45deg);
 }
 .ferm-opstellingen .fo-prev span { rotate: 180deg; }

@@ -70,8 +70,8 @@
 .dm-slider-arrow.is-next{right:12px;top:50%;translate:0 -50%}
 .dm-slider-arrow span{position:relative;display:block;width:46px;height:18px;filter:drop-shadow(0 0 2px #fff)}
 .dm-slider-arrow span::before,.dm-slider-arrow span::after{content:"";position:absolute;top:50%}
-.dm-slider-arrow span::before{left:0;right:1px;height:2px;background:currentColor;transform:translateY(-50%)}
-.dm-slider-arrow span::after{right:2px;width:11px;height:11px;border-top:2px solid;border-right:2px solid;transform:translateY(-50%) rotate(45deg)}
+.dm-slider-arrow span::before{left:0;right:1px;height:3px;background:currentColor;transform:translateY(-50%)}
+.dm-slider-arrow span::after{right:2px;width:11px;height:11px;border-top:3px solid;border-right:3px solid;transform:translateY(-50%) rotate(45deg)}
 .dm-slider-arrow.is-prev span{rotate:180deg}
 .dm-slider--vertical .dm-slider-arrow{left:50%;right:auto;translate:-50% 0}
 .dm-slider--vertical .is-prev{top:8px}
