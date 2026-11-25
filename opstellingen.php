@@ -1,14 +1,24 @@
 <?php
 if (!defined('ABSPATH')) { exit; }
 
+function ferm_opstellingen_palette() {
+    return array(
+        'Custom colour' => 'custom', 'Black' => 'black', 'Off-white' => 'off-white',
+        'Green' => 'green', 'Light green' => 'light-green', 'Blue' => 'blue',
+        'Light blue' => 'light-blue', 'Pink' => 'pink', 'Red' => 'red', 'Orange' => 'orange',
+    );
+}
+
 function ferm_opstellingen_fields() {
     return array(
         'dropdown_style' => array('textfield', 'Impreza field style', '', 'Leave blank for the theme default, or enter the style number (for example 2 or 3).'),
         'text_style' => array('dropdown', 'Impreza setup name style', array('Component default' => 'default', 'Body text' => 'body', 'Heading 1' => 'h1', 'Heading 2' => 'h2', 'Heading 3' => 'h3', 'Heading 4' => 'h4', 'Heading 5' => 'h5', 'Heading 6' => 'h6'), 'Uses the typography saved in Impreza. Capacity labels use body text.'),
         'font' => array('textfield', 'Font family override', '', 'Optional. Leave blank to use Impreza typography.'),
         'text_side' => array('dropdown', 'Text side', array('Right' => 'right', 'Left' => 'left'), 'Sets the position of the setup list on desktop.'),
-        'hover_color' => array('colorpicker', 'Hover colour', '#263723', ''),
-        'active_color' => array('colorpicker', 'Active colour', '#263723', ''),
+        'hover_palette' => array('dropdown', 'Hover colour (Impreza palette)', ferm_opstellingen_palette(), ''),
+        'hover_color' => array('colorpicker', 'Hover custom colour', '#263723', ''),
+        'active_palette' => array('dropdown', 'Active colour (Impreza palette)', ferm_opstellingen_palette(), ''),
+        'active_color' => array('colorpicker', 'Active custom colour', '#263723', ''),
         'radius' => array('textfield', 'Image corner radius', '12', 'Pixels. Use 0 for square corners.'),
         'image_layout' => array('dropdown', 'Image layout', array('Side by side' => 'split', 'Full width on image side' => 'full'), 'Extends the photo to the viewport edge on its side and keeps the list alongside on desktop.'),
         'image_width' => array('textfield', 'Image column width', '57', 'Percentage of the available column space. The text column takes the remainder.'),
@@ -44,6 +54,9 @@ add_action('vc_before_init', function () {
     foreach (array_merge(ferm_opstellingen_fields(), ferm_opstellingen_content_fields()) as $key => $field) {
         list($type, $label, $value, $description) = $field;
         $param = array('type' => $type, 'heading' => $label, 'param_name' => $key, 'value' => $value, 'description' => $description);
+        if (in_array($key, array('hover_color', 'active_color'), true)) {
+            $param['dependency'] = array('element' => str_replace('_color', '_palette', $key), 'value' => 'custom');
+        }
         if (isset($field[4])) { $param['group'] = $field[4]; }
         $params[] = $param;
     }
@@ -73,6 +86,14 @@ add_shortcode('ferm_opstellingen', function ($attributes) {
     $style = sprintf('--fo-active:%s;--fo-hover:%s;--fo-active-text:%s;--fo-hover-text:%s;--fo-radius:%dpx;--fo-image:%dfr;--fo-text:%dfr;',
         $active, $hover, ferm_opstellingen_text_color($active), ferm_opstellingen_text_color($hover),
         max(0, min(200, (int) $options['radius'])), $image_width, 100 - $image_width);
+    $palette = ferm_opstellingen_palette();
+    foreach (array('active', 'hover') as $state) {
+        $choice = $options[$state . '_palette'];
+        if ($choice !== 'custom' && in_array($choice, $palette, true)) {
+            $fallback = $state === 'active' ? $active : $hover;
+            $style .= '--fo-' . $state . ':var(--color-' . $choice . ',' . $fallback . ');';
+        }
+    }
     $text_style = $options['text_style'];
     if (in_array($text_style, array('body', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'), true)) {
         $prefix = $text_style === 'body' ? '' : $text_style . '-';
@@ -101,7 +122,7 @@ add_shortcode('ferm_opstellingen', function ($attributes) {
     ob_start();
     ?>
     <section class="ferm-opstellingen<?php echo esc_attr($layout); ?>" aria-label="Ruimteopstellingen"
-        style="<?php echo esc_attr($style); ?>" data-setups="<?php echo esc_attr(wp_json_encode($slides)); ?>">
+        style="<?php echo esc_attr($style); ?>" data-setups="<?php echo esc_attr(wp_json_encode($slides)); ?>" data-palette="<?php echo esc_attr($options['active_palette'] . ' ' . $options['hover_palette']); ?>">
         <figure aria-label="Foto’s van de opstellingen" tabindex="0">
             <div class="fo-photo">
                 <button class="fo-arrow fo-prev" type="button" aria-label="Vorige opstelling"><span aria-hidden="true">←</span></button>

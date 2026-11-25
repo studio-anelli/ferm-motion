@@ -1,6 +1,24 @@
 (() => {
   function init(root) {
     const slides=JSON.parse(root.dataset.setups);
+    if(root.dataset.palette && root.dataset.palette!=='custom custom'){
+      const swatch=document.createElement('span');
+      swatch.hidden=true;
+      root.append(swatch);
+      for(const state of ['active','hover']){
+        swatch.style.backgroundColor='var(--fo-'+state+')';
+        const rgb=getComputedStyle(swatch).backgroundColor.match(/^rgba?\(([\d.]+), ?([\d.]+), ?([\d.]+)/);
+        if(!rgb)continue;
+        const channels=rgb.slice(1).map(channel=>{
+          const value=Number(channel)/255;
+          return value<=.04045 ? value/12.92 : Math.pow((value+.055)/1.055,2.4);
+        });
+        const luminance=.2126*channels[0]+.7152*channels[1]+.0722*channels[2];
+        root.style.setProperty('--fo-'+state+'-text',luminance>.179?'#000':'#fff');
+      }
+      swatch.remove();
+    }
+
     const gallery=root.querySelector('figure'), photo=root.querySelector('.fo-photo'), list=root.querySelector('.fo-list');
     const previous=root.querySelector('.fo-prev'), next=root.querySelector('.fo-next');
     let index=0;
