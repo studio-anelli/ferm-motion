@@ -46,3 +46,38 @@
   .ferm-opstellingen.fo-full figure{margin-right:calc(-1 * var(--fo-right-gutter,0px))}
   .ferm-opstellingen.fo-full figcaption{padding-inline:12px}
 }
+
+.ferm-opstellingen .fo-arrow { width: 54px; }
+.ferm-opstellingen .fo-arrow span {
+  display: block;
+  position: relative;
+  width: 46px;
+  height: 18px;
+  font-size: 0;
+}
+.ferm-opstellingen .fo-arrow span::before,
+.ferm-opstellingen .fo-arrow span::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+}
+.ferm-opstellingen .fo-arrow span::before {
+  left: 0;
+  right: 1px;
+  height: 2px;
+  background: currentColor;
+  transform: translateY(-50%);
+}
+.ferm-opstellingen .fo-arrow span::after {
+  right: 2px;
+  width: 11px;
+  height: 11px;
+  border-top: 2px solid;
+  border-right: 2px solid;
+  transform: translateY(-50%) rotate(45deg);
+}
+.ferm-opstellingen .fo-prev span { rotate: 180deg; }
+@media (hover: hover) and (pointer: fine) {
+  .ferm-opstellingen .fo-arrow { width: 50%; }
+  .ferm-opstellingen .fo-arrow span { position: absolute; }
+}

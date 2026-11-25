@@ -59,7 +59,7 @@
         if(event.pointerType==='touch')return;
         const bounds=arrow.getBoundingClientRect();
         const frame=photo.getBoundingClientRect();
-        const x=Math.max(15,Math.min(frame.width-15,event.clientX-frame.left));
+        const x=Math.max(28,Math.min(frame.width-28,event.clientX-frame.left));
         const y=Math.max(15,Math.min(frame.height-15,event.clientY-frame.top));
         arrow.style.setProperty('--arrow-x',(x+frame.left-bounds.left)+'px');
         arrow.style.setProperty('--arrow-y',y+'px');

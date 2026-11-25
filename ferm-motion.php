@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Organic Motion
  * Description: Lightweight, accessible scroll-triggered motion effects for WPBakery / Impreza and regular WordPress content.
- * Version: 1.0.19
+ * Version: 1.0.20
  * Plugin URI: https://anelli.studio/
  * Requires PHP: 7.4
  * Author: Anelli Studio
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) { exit; }
 
 final class FERM_Motion {
     const OPTION = 'ferm_motion_settings';
-    const VERSION = '1.0.19';
+    const VERSION = '1.0.20';
 
     public static function defaults() {
         return array('duration'=>900, 'distance'=>36, 'stagger'=>120, 'parallax_percent'=>12, 'image_parallax_percent'=>7, 'organic_travel_percent'=>7, 'organic_intensity'=>100, 'organic_easing'=>'editorial', 'image_parallax_radius'=>0, 'background_parallax_percent'=>9, 'background_overscan'=>8, 'section_parallax_percent'=>4, 'parallax_easing'=>'soft', 'image_easing'=>'soft', 'background_easing'=>'soft', 'section_easing'=>'soft', 'scroll_enabled'=>0, 'scroll_smoothing'=>10, 'scroll_wheel'=>85, 'scroll_focus'=>'off', 'image_trigger'=>45, 'text_trigger'=>95, 'once'=>1, 'enabled'=>1, 'color_enabled'=>1, 'color_position'=>55, 'color_softness'=>'balanced', 'color_start'=>80, 'color_end'=>20, 'color_easing'=> 'smooth', 'color_cream'=>'#F8F4EC', 'color_orange'=>'#F16A37', 'color_green'=>'#507568', 'color_pink'=>'#DD8EB9', 'color_ink'=>'#25231F', 'header_enabled'=>0, 'header_mode'=>'transparent', 'header_contrast'=>'auto', 'header_selector'=>'.l-header', 'header_mono_logo'=>0, 'header_easing'=>'follow');
