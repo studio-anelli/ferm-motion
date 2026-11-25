@@ -1,22 +1,22 @@
 .ferm-opstellingen{display:grid;grid-template-columns:minmax(0,var(--fo-image)) minmax(0,var(--fo-text));gap:clamp(22px,4vw,60px);align-items:start}
-.ferm-opstellingen figure{margin:0;min-width:0}.fo-photo{aspect-ratio:5/4;position:relative;overflow:hidden;border-radius:var(--fo-radius);background:#d6cabc;touch-action:pan-y}
-.ferm-opstellingen img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .32s ease}
+.ferm-opstellingen figure{margin:0;min-width:0}.fo-photo{aspect-ratio:5/4;position:relative;overflow:hidden;border-radius:var(--fo-radius);background:#d6cabc;isolation:isolate;touch-action:pan-y}
+.ferm-opstellingen img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;opacity:0;transition:opacity .32s ease}
 .ferm-opstellingen img.active{opacity:1}
 .ferm-opstellingen :where(button){font:inherit;color:inherit;cursor:pointer}
-.fo-arrow{z-index:1;position:absolute;top:50%;translate:0 -50%;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;background:none;color:#000;font-size:38px;line-height:1;text-shadow:0 0 3px #fff9}
+.ferm-opstellingen .fo-arrow{appearance:none;box-shadow:none;z-index:2;position:absolute;top:50%;translate:0 -50%;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;background:none;color:#000;font-size:38px;line-height:1;text-shadow:0 0 3px #fff9}
 .fo-prev{left:10px}.fo-next{right:10px}
 @media(hover:hover) and (pointer:fine){
-  .fo-arrow{top:0;bottom:0;width:50%;height:100%;translate:none;cursor:none}
+  .ferm-opstellingen .fo-arrow{top:0;bottom:0;width:50%;height:100%;translate:none;cursor:none}
   .fo-prev{left:0}.fo-next{right:0}
   .fo-arrow span{position:absolute;left:var(--arrow-x,var(--arrow-default));top:var(--arrow-y,50%);translate:-50% -50%;opacity:0;pointer-events:none;transition:opacity .15s}
   .fo-prev{--arrow-default:28px}.fo-next{--arrow-default:calc(100% - 28px)}
-  .fo-arrow[data-tracking] span,.fo-arrow:focus-visible span{opacity:1}
+  .fo-arrow:hover span,.fo-arrow[data-tracking] span,.fo-arrow:focus-visible span{opacity:1}
   .fo-arrow:focus-visible{outline-offset:-4px}
 }
 .ferm-opstellingen button:focus-visible{outline:2px solid #8e4936;outline-offset:3px}
 .ferm-opstellingen figcaption{display:none;justify-content:space-between;gap:12px;padding:12px 0 0;font-size:14px}
 .fo-list{position:relative;isolation:isolate}.fo-choice{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,45%);align-items:center;text-align:left;gap:6px 15px;width:100%;border:0;background:transparent;padding:15px 12px;min-height:51px}.fo-choice span:first-child{min-width:0;overflow-wrap:anywhere;font-size:clamp(16px,1.7vw,23px);letter-spacing:-.04em}.fo-choice span:last-child{font-size:12px}@media(hover:hover){.fo-choice:not([aria-pressed=true]):hover{background:var(--fo-hover);color:var(--fo-hover-text);border-radius:10px}}.fo-choice[aria-pressed=true]{background:transparent;color:var(--fo-active-text)}
-.fo-choice[hidden],.fo-arrow[hidden]{display:none}.fo-filters{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}.fo-filters label{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px}.fo-filters .w-form-row-field{min-width:0}.fo-selection{position:absolute;inset:0 0 auto;height:var(--row-height,0px);transform:translateY(var(--row-top,0px));background:var(--fo-active);border-radius:10px;pointer-events:none;z-index:-1}
+.fo-choice[hidden],.ferm-opstellingen .fo-arrow[hidden]{display:none}.fo-filters{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}.fo-filters label{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px}.fo-filters .w-form-row-field{min-width:0}.fo-selection{position:absolute;inset:0 0 auto;height:var(--row-height,0px);transform:translateY(var(--row-top,0px));background:var(--fo-active);border-radius:10px;pointer-events:none;z-index:-1}
 .fo-list.is-ready .fo-selection{transition:transform .27s cubic-bezier(.22,.75,.25,1),height .27s ease}
 @media(max-width:720px){.ferm-opstellingen figcaption{display:flex}.ferm-opstellingen{grid-template-columns:1fr}.fo-photo{aspect-ratio:4/3}.fo-choice{padding-block:10px}}
 @media(prefers-reduced-motion:reduce){.ferm-opstellingen img,.fo-arrow span,.fo-list.is-ready .fo-selection{transition:none}}
