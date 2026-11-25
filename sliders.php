@@ -118,7 +118,7 @@ final class FERM_Motion_Sliders {
             $image=wp_get_attachment_image($attachment_id,'large',false,array('loading'=>'lazy','decoding'=>'async','alt'=>$alt,'sizes'=>'(max-width:767px) 94vw, (max-width:1100px) 75vw, 70vw'));
             if(!$image)continue;
             $slide_style=$natural_gallery?' style="--dm-slider-photo-ratio:'.esc_attr(wp_json_encode((int)$src[1]/max(1,(int)$src[2]))).'"':'';
-            $html.='<li class="splide__slide"'.$slide_style.'><figure class="dm-slide-frame">'.$image;
+            $html.='<li class="dm-slider-slide"'.$slide_style.'><figure class="dm-slide-frame">'.$image;
             if(!empty($s['captions'])&&$caption)$html.='<figcaption>'.esc_html($caption).'</figcaption>';
             $html.='</figure></li>';
             $found++;
@@ -130,8 +130,8 @@ final class FERM_Motion_Sliders {
         if($natural_gallery&&$s['natural_gallery_height']>0){
             $styles.='--dm-slider-custom-photo-height:'.(int)$s['natural_gallery_height'].'svh;';
         }
-        return '<div class="'.esc_attr($classes).' splide" aria-label="'.esc_attr(get_the_title($id)).'" data-dm-slider="'.esc_attr(wp_json_encode($params)).'" style="'.esc_attr($styles).'">'
-          .'<div class="splide__track"><ul class="splide__list">'.$html.'</ul></div>'
+        return '<div class="'.esc_attr($classes).'" aria-label="'.esc_attr(get_the_title($id)).'" data-dm-slider="'.esc_attr(wp_json_encode($params)).'" style="'.esc_attr($styles).'">'
+          .'<div class="dm-slider-track"><ul class="dm-slider-list">'.$html.'</ul></div>'
           .'</div>';
     }
 

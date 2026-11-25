@@ -6,11 +6,21 @@
   function init(root) {
     if(root.dataset.dmSliderReady)return;
     let opt={};try{opt=JSON.parse(root.dataset.dmSlider||'{}');}catch(e){}
-    const track=root.querySelector('.splide__track');
-    const list=root.querySelector('.splide__list');
+    const track=root.querySelector('.dm-slider-track, .splide__track');
+    const list=root.querySelector('.dm-slider-list, .splide__list');
     const originals=Array.from(list?list.children:[]);
     if(!track||!list||!originals.length)return;
     root.dataset.dmSliderReady='1';
+    // Normalize markup from pages cached before the slider class names changed.
+    root.classList.remove('splide');
+    track.classList.remove('splide__track');
+    list.classList.remove('splide__list');
+    track.classList.add('dm-slider-track');
+    list.classList.add('dm-slider-list');
+    originals.forEach(slide=>{
+      slide.classList.remove('splide__slide');
+      slide.classList.add('dm-slider-slide');
+    });
     const vertical=opt.direction==='vertical';
     const normalScroll=()=>vertical?track.scrollTop:track.scrollLeft;
     let lastWrittenScroll=normalScroll();
@@ -98,13 +108,14 @@
       const dt=lastTick?Math.min(0.05,(now-lastTick)/1000):0;
       lastTick=now;
       const onscreen=typeof IntersectionObserver==='function'?visible:inViewport();
-      if(document.hidden||!onscreen){
+      if(document.hidden||(!onscreen&&navigationTarget===null)){
         pendingScroll=0;
-        if(scrollDriven||looping)frame=requestAnimationFrame(tick);
-        else{current=target=normalScroll();frame=0;lastTick=0;}
+        current=target=normalScroll();
+        stopNavigation();
+        frame=0;lastTick=0;
         return;
       }
-      // Scroll impulse is transient. The base velocity survives and resumes.
+      // Apply page-scroll influence only between manual navigation steps.
       const active=!dragging;
       if(active&&scrollDriven&&navigationTarget===null){
         const step=pendingScroll*(1-Math.exp(-dt*9));
@@ -124,7 +135,7 @@
         writeScroll(current);
         stopNavigation();
       }
-      if(scrollDriven||looping||Math.abs(current-target)>0.1)frame=requestAnimationFrame(tick);
+      if(pendingScroll || navigationTarget!==null || Math.abs(current-target)>0.1)frame=requestAnimationFrame(tick);
       else{frame=0;lastTick=0;}
     }
     function ensure(){if(!frame){lastTick=0;frame=requestAnimationFrame(tick);}}
@@ -142,7 +153,7 @@
       track.addEventListener('pointerdown',e=>{
         if(e.pointerType!=='mouse'||e.button!==0)return;
         stopNavigation();pendingScroll=0;
-        dragging=true;dragOrigin=vertical?e.clientY:e.clientX;dragScroll=current;
+        dragging=true;dragOrigin=vertical?e.clientY:e.clientX;dragScroll=normalScroll();
         track.classList.add('dm-slider-dragging');
       });
       window.addEventListener('pointermove',e=>{
@@ -221,6 +232,42 @@
         button.addEventListener('click',()=>navigate(direction));
         root.append(button);
       }
+
+      // The fixed buttons remain available for touch and keyboard navigation.
+      // With a mouse, the photo surface offers the same controls at the pointer.
+      const pointer = document.createElement('span');
+      pointer.className = 'dm-slider-arrow dm-slider-pointer';
+      pointer.setAttribute('aria-hidden', 'true');
+      pointer.append(document.createElement('span'));
+      root.append(pointer);
+      const isInteractive = event => event.target.closest('a, button, input, select, textarea, [contenteditable]');
+      function clearPointer(){
+        root.classList.remove('dm-slider--pointer');
+      }
+      track.addEventListener('pointermove', event => {
+        if(event.pointerType !== 'mouse' || event.buttons || isInteractive(event)){
+          clearPointer();
+          return;
+        }
+        const bounds = track.getBoundingClientRect();
+        const x = event.clientX - bounds.left;
+        const y = event.clientY - bounds.top;
+        const pointerDirection = (vertical ? y < bounds.height / 2 : x < bounds.width / 2) ? -1 : 1;
+        pointer.classList.toggle('is-prev', pointerDirection < 0);
+        pointer.classList.toggle('is-next', pointerDirection > 0);
+        const rootBounds = root.getBoundingClientRect();
+        pointer.style.left = (event.clientX - rootBounds.left) + 'px';
+        pointer.style.top = (event.clientY - rootBounds.top) + 'px';
+        root.classList.add('dm-slider--pointer');
+      }, {passive:true});
+      track.addEventListener('pointerleave', clearPointer);
+      track.addEventListener('pointercancel', clearPointer);
+      track.addEventListener('click', event => {
+        if(event.pointerType !== 'mouse' || event.defaultPrevented || isInteractive(event))return;
+        const rect = track.getBoundingClientRect();
+        const previous = vertical ? event.clientY < rect.top + rect.height / 2 : event.clientX < rect.left + rect.width / 2;
+        navigate(previous ? -1 : 1);
+      });
     }
     track.addEventListener('keydown',e=>{
       const forward=vertical?'ArrowDown':'ArrowRight';
@@ -238,7 +285,6 @@
         if(navigationTarget!==null){target=clamp(centre(navigationTarget),0,Math.max(0,travel()));ensure();}
       });ro.observe(track);
     }
-    if(scrollDriven||looping)ensure();
   }
   function boot(){document.querySelectorAll('.dm-slider[data-dm-slider]').forEach(init);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
