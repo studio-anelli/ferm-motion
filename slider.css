@@ -80,7 +80,7 @@
 .dm-slider--vertical .is-next span{rotate:90deg}
 @media(hover:hover) and (pointer:fine){
   .dm-slider-arrow{opacity:0;pointer-events:none;transition:opacity .18s ease}
-  .dm-slider:hover .dm-slider-arrow,.dm-slider:focus-within .dm-slider-arrow{opacity:1;pointer-events:auto}
+  .dm-slider button.dm-slider-arrow:focus-visible{opacity:1;pointer-events:auto}
 }
 @media(prefers-reduced-motion:reduce){.dm-slider-arrow{transition:none}}
 
