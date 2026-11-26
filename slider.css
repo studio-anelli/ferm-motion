@@ -86,9 +86,9 @@
 
 .dm-slider .dm-slider-pointer{display:none;pointer-events:none;translate:-50% -50%}
 @media (any-hover:hover) and (any-pointer:fine){
-  .dm-slider--pointer:not(:has(button:focus-visible)) button.dm-slider-arrow{opacity:0;pointer-events:none}
-  .dm-slider--pointer:not(:has(button:focus-visible)) .dm-slider-pointer{display:grid;opacity:1;pointer-events:none}
-  .dm-slider--pointer:not(:has(button:focus-visible)) .dm-slider-track{cursor:none}
+  .dm-slider--pointer:has(.dm-slider-track:hover):not(:has(button:focus-visible)) button.dm-slider-arrow{opacity:0;pointer-events:none}
+  .dm-slider--pointer:has(.dm-slider-track:hover):not(:has(button:focus-visible)) .dm-slider-pointer{display:grid;opacity:1;pointer-events:none}
+  .dm-slider--pointer:has(.dm-slider-track:hover):not(:has(button:focus-visible)) .dm-slider-track{cursor:none}
 }
 
 /* Invert the pixels underneath the arrow, including changing photo tones. */

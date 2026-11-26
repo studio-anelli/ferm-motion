@@ -210,17 +210,21 @@
       navigationTarget=null;
       root.classList.remove('dm-slider--navigating');
     }
-    function navigate(direction){
-      if(!navigable||dragging)return;
+    function destinationFor(direction){
+      if(!navigable||dragging)return null;
       const reference=navigationTarget===null?normalScroll():target;
       const slides=children();
       const nearest=slides.reduce((best,slide,i)=>
         Math.abs(centre(slide)-reference)<Math.abs(centre(slides[best])-reference)?i:best,0);
       const nextSlide=slides[nearest+direction];
       if(!nextSlide){
-        if(navigationTarget!==null || Math.abs(centre(slides[nearest])-reference)<1)return;
+        if(navigationTarget!==null || Math.abs(clamp(centre(slides[nearest]),0,Math.max(0,travel()))-reference)<1)return null;
       }
-      const destination=nextSlide || slides[nearest];
+      return nextSlide || slides[nearest];
+    }
+    function navigate(direction){
+      const destination=destinationFor(direction);
+      if(!destination)return;
       pendingScroll=0;
       target=clamp(centre(destination),0,Math.max(0,travel()));
       navigationTarget=destination;
@@ -254,7 +258,9 @@
       pointer.append(document.createElement('span'));
       root.append(pointer);
       const isInteractive = event => event.target.closest('a, button, input, select, textarea, [contenteditable]');
+      let pointerDirection=0;
       function clearPointer(){
+        pointerDirection=0;
         root.classList.remove('dm-slider--pointer');
       }
       track.addEventListener('pointermove', event => {
@@ -265,7 +271,12 @@
         const bounds = track.getBoundingClientRect();
         const x = event.clientX - bounds.left;
         const y = event.clientY - bounds.top;
-        const pointerDirection = (vertical ? y < bounds.height / 2 : x < bounds.width / 2) ? -1 : 1;
+        const direction = (vertical ? y < bounds.height / 2 : x < bounds.width / 2) ? -1 : 1;
+        if(!destinationFor(direction)){
+          clearPointer();
+          return;
+        }
+        pointerDirection=direction;
         pointer.classList.toggle('is-prev', pointerDirection < 0);
         pointer.classList.toggle('is-next', pointerDirection > 0);
         const rootBounds = root.getBoundingClientRect();
@@ -275,11 +286,17 @@
       }, {passive:true});
       track.addEventListener('pointerleave', clearPointer);
       track.addEventListener('pointercancel', clearPointer);
+      window.addEventListener('scroll', clearPointer,{passive:true});
+      window.addEventListener('blur', clearPointer);
+      track.addEventListener('scroll',()=>{
+        if(pointerDirection&&!looping&&!destinationFor(pointerDirection))clearPointer();
+      },{passive:true});
       track.addEventListener('click', event => {
         if(event.pointerType !== 'mouse' || event.defaultPrevented || isInteractive(event))return;
         const rect = track.getBoundingClientRect();
         const previous = vertical ? event.clientY < rect.top + rect.height / 2 : event.clientX < rect.left + rect.width / 2;
         navigate(previous ? -1 : 1);
+        if(pointerDirection&&!looping&&!destinationFor(pointerDirection))clearPointer();
       });
     }
     track.addEventListener('keydown',e=>{
