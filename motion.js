@@ -552,13 +552,35 @@
   function initPageBlend(){
     if(!cfg.pageBlendEnabled||reduceMotion)return;
     var key='organic-motion-page-blend';
-    var rows=Array.from(document.querySelectorAll('.dm-color-flow')).filter(rowColor);
-
-    function visibleRow(){
-      return rows.find(function(row){
-        var bounds=row.getBoundingClientRect();
-        return bounds.bottom>0 && bounds.top<window.innerHeight && bounds.height>0;
+    var sectionSelector='.l-section,.vc_row,.wpb_row,.dm-color-flow,main section';
+    function solidBackground(element){
+      var style=getComputedStyle(element);
+      if(style.backgroundImage!=='none')return null;
+      var channels=/^rgb\(\s*(\d+),\s*(\d+),\s*(\d+)\s*\)$/.exec(style.backgroundColor);
+      return channels ? '#'+channels.slice(1).map(function(channel){
+        return Number(channel).toString(16).padStart(2,'0');
+      }).join('').toUpperCase() : null;
+    }
+    function readSection(section){
+      if(section.querySelector('.l-section-img,.vc_parallax-inner'))return null;
+      var inner=section.querySelector(':scope > .l-section-h');
+      var element=inner&&solidBackground(inner)?inner:section;
+      var colour=solidBackground(element)||rowColor(element);
+      if(!colour||getComputedStyle(element).backgroundImage!=='none')return null;
+      return {element:element,colour:colour};
+    }
+    function visibleSection(fraction){
+      var sections=Array.from(document.querySelectorAll(sectionSelector));
+      var y=window.innerHeight*fraction;
+      var visible=sections.filter(function(section){
+        var rect=section.getBoundingClientRect();
+        return rect.width>=window.innerWidth*.5 && rect.bottom>0 && rect.top<window.innerHeight &&
+          rect.height>0 && getComputedStyle(section).visibility==='visible';
       });
+      return visible.find(function(section){
+        var rect=section.getBoundingClientRect();
+        return rect.top<=y&&rect.bottom>y;
+      })||visible[0];
     }
     function clickedLink(event){
       if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
@@ -567,10 +589,14 @@
       var url=new URL(link.href,location.href);
       if(url.origin!==location.origin||url.hash||url.href===location.href)return;
       if(url.pathname===location.pathname&&url.search===location.search)return;
-      var row=link.closest('.dm-color-flow');
-      if(!rows.includes(row))row=visibleRow();
-      if(!row)return;
-      var colour=lastColourValues.get(row)||rowColor(row);
+      var section=link.closest(sectionSelector);
+      var source=section&&readSection(section);
+      if(!source){
+        section=visibleSection(.5);
+        source=section&&readSection(section);
+      }
+      if(!source)return;
+      var colour=source.colour;
       try{sessionStorage.setItem(key,JSON.stringify({url:url.href,colour:colour,time:Date.now()}));}catch(error){}
     }
     document.addEventListener('click',clickedLink);
@@ -586,15 +612,16 @@
     }catch(error){return;}
     if(!handoff||handoff.url!==location.href||Date.now()-handoff.time>10000)return;
     var from=validHex(handoff.colour);
-    var row=visibleRow();
-    if(!from||!row)return;
-    if(getComputedStyle(row).backgroundImage!=='none'||row.querySelector('.l-section-img, .vc_parallax-inner'))return;
+    var section=visibleSection(.18);
+    var destination=section&&readSection(section);
+    if(!from||!destination)return;
+    var row=destination.element;
 
     var priorImage=row.style.getPropertyValue('background-image');
     var priorImagePriority=row.style.getPropertyPriority('background-image');
     var priorColour=row.style.getPropertyValue('background-color');
     var priorColourPriority=row.style.getPropertyPriority('background-color');
-    var to=rowColor(row);
+    var to=destination.colour;
     if(from===to)return;
     pageBlendRow=row;
     var start=performance.now();
