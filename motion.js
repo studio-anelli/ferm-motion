@@ -646,10 +646,16 @@
     }
     frame(start);
   }
-  function start(){init(document);initColours();initPageBlend();
-    var cover=document.getElementById('ferm-page-blend-cover');
-    if(cover)cover.remove();
-    initSmoothScroll();schedule();}
+  function start(){
+    init(document);
+    initColours();
+    // Read the actual destination colour after dropping the temporary first-paint styles.
+    var firstPaint=document.getElementById('ferm-page-blend-cover');
+    if(firstPaint)firstPaint.remove();
+    initPageBlend();
+    initSmoothScroll();
+    schedule();
+  }
   window.FERMMotion={refresh:function(root){init(root||document);initColours();schedule();},diagnostics:function(){return Object.assign({version:'1.8.2',smoothScroll:!!lenisInstance,scrollReason:smoothReason,lenisLoaded:typeof window.Lenis==='function',wpbakeryBodyClass:document.body.classList.contains('wpb-js-composer'),scrollConfigured:!!cfg.scrollEnabled,scrollFocus:cfg.scrollFocus||'off',reducedMotion:!!reduceMotion,imageTrigger:cfg.imageTrigger||45,colorEnabled:!!cfg.colorEnabled},stats);}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
