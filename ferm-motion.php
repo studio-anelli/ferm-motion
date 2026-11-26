@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Organic Motion
  * Description: Lightweight, accessible scroll-triggered motion effects for WPBakery / Impreza and regular WordPress content.
- * Version: 1.0.33
+ * Version: 1.0.34
  * Plugin URI: https://anelli.studio/
  * Requires PHP: 7.4
  * Author: Anelli Studio
@@ -15,42 +15,19 @@ if (!defined('ABSPATH')) { exit; }
 
 final class FERM_Motion {
     const OPTION = 'ferm_motion_settings';
-    const VERSION = '1.0.33';
+    const VERSION = '1.0.34';
 
     public static function defaults() {
-        return array('duration'=>900, 'distance'=>36, 'stagger'=>120, 'parallax_percent'=>12, 'image_parallax_percent'=>7, 'organic_travel_percent'=>7, 'organic_intensity'=>100, 'organic_easing'=>'editorial', 'image_parallax_radius'=>0, 'background_parallax_percent'=>9, 'background_overscan'=>8, 'section_parallax_percent'=>4, 'parallax_easing'=>'soft', 'image_easing'=>'soft', 'background_easing'=>'soft', 'section_easing'=>'soft', 'scroll_enabled'=>0, 'scroll_smoothing'=>10, 'scroll_wheel'=>85, 'scroll_focus'=>'off', 'image_trigger'=>45, 'text_trigger'=>95, 'once'=>1, 'enabled'=>1, 'color_enabled'=>1, 'page_blend_enabled'=>0, 'color_position'=>55, 'color_softness'=>'balanced', 'color_start'=>80, 'color_end'=>20, 'color_easing'=> 'smooth', 'color_cream'=>'#F8F4EC', 'color_orange'=>'#F16A37', 'color_green'=>'#507568', 'color_pink'=>'#DD8EB9', 'color_ink'=>'#25231F', 'header_enabled'=>0, 'header_mode'=>'transparent', 'header_contrast'=>'auto', 'header_selector'=>'.l-header', 'header_mono_logo'=>0, 'header_easing'=>'follow');
+        return array('duration'=>900, 'distance'=>36, 'stagger'=>120, 'parallax_percent'=>12, 'image_parallax_percent'=>7, 'organic_travel_percent'=>7, 'organic_intensity'=>100, 'organic_easing'=>'editorial', 'image_parallax_radius'=>0, 'background_parallax_percent'=>9, 'background_overscan'=>8, 'section_parallax_percent'=>4, 'parallax_easing'=>'soft', 'image_easing'=>'soft', 'background_easing'=>'soft', 'section_easing'=>'soft', 'scroll_enabled'=>0, 'scroll_smoothing'=>10, 'scroll_wheel'=>85, 'scroll_focus'=>'off', 'image_trigger'=>45, 'text_trigger'=>95, 'once'=>1, 'enabled'=>1, 'color_enabled'=>1, 'color_position'=>55, 'color_softness'=>'balanced', 'color_start'=>80, 'color_end'=>20, 'color_easing'=> 'smooth', 'color_cream'=>'#F8F4EC', 'color_orange'=>'#F16A37', 'color_green'=>'#507568', 'color_pink'=>'#DD8EB9', 'color_ink'=>'#25231F', 'header_enabled'=>0, 'header_mode'=>'transparent', 'header_contrast'=>'auto', 'header_selector'=>'.l-header', 'header_mono_logo'=>0, 'header_easing'=>'follow');
     }
     public static function settings() {
         return wp_parse_args(get_option(self::OPTION, array()), self::defaults());
     }
     public static function init() {
-        add_action('wp_head', array(__CLASS__, 'page_blend_bootstrap'), 0);
         add_action('wp_enqueue_scripts', array(__CLASS__, 'assets'));
         add_action('admin_menu', array(__CLASS__, 'menu'));
         add_action('admin_init', array(__CLASS__, 'register'));
         FERM_Motion_Sliders::init();
-    }
-    public static function page_blend_bootstrap() {
-        $settings = self::settings();
-        if (empty($settings['enabled']) || empty($settings['page_blend_enabled'])) { return; }
-        ?>
-        <script id="ferm-page-blend-bootstrap">
-        (function () {
-          if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-          try {
-            var handoff = JSON.parse(sessionStorage.getItem('organic-motion-page-blend'));
-            if (!handoff || handoff.url !== location.href || !(Date.now() - handoff.time <= 10000) ||
-                !/^#[0-9a-f]{6}$/i.test(handoff.colour)) return;
-            var style = document.createElement('style');
-            style.id = 'ferm-page-blend-cover';
-            style.textContent = 'html,body,#page-content,#page-content > .l-section:first-child{background-color:' + handoff.colour + '!important}';
-            document.head.appendChild(style);
-            window.addEventListener('pagehide', function () { style.remove(); }, {once:true});
-            window.setTimeout(function () { style.remove(); }, 1500);
-          } catch (error) {}
-        })();
-        </script>
-        <?php
     }
     public static function assets() {
         if (is_admin()) { return; }
@@ -87,7 +64,6 @@ final class FERM_Motion {
             'imageTrigger' => (int) $settings['image_trigger'],
             'textTrigger' => (int) $settings['text_trigger'],
             'once'     => !empty($settings['once']),
-            'pageBlendEnabled' => !empty($settings['page_blend_enabled']),
             'colorEnabled' => !empty($settings['color_enabled']),
             'colorPosition' => (int) $settings['color_position'],
             'colorSoftness' => $settings['color_softness'],
@@ -144,7 +120,6 @@ final class FERM_Motion {
             'image_trigger'=>max(10, min(95, absint($raw['image_trigger'] ?? 45))),
             'text_trigger'=>max(10, min(95, absint($raw['text_trigger'] ?? 95))),
             'once'=>empty($raw['once']) ? 0 : 1,
-            'page_blend_enabled'=>empty($raw['page_blend_enabled']) ? 0 : 1,
             'color_enabled'=>empty($raw['color_enabled']) ? 0 : 1,
             'header_enabled'=>empty($raw['header_enabled']) ? 0 : 1,
             'header_mode'=>in_array($raw['header_mode']??'',array('transparent','match'),true)?$raw['header_mode']:'transparent',
@@ -272,7 +247,6 @@ final class FERM_Motion {
               <?php self::color_field('cream','Cream','cream');self::color_field('orange','Orange','orange');self::color_field('green','Green','green');self::color_field('pink','Pink','pink');self::color_field('ink','Ink','ink'); ?>
             </div>
             <table class="form-table" role="presentation"><tbody>
-            <tr><th scope="row">Page background blend</th><td><label><input type="checkbox" name="<?php echo esc_attr(self::OPTION); ?>[page_blend_enabled]" value="1" <?php checked($s['page_blend_enabled'],1); ?>> Blend background colours between pages</label><p class="description">Reads solid background colours from visible sections automatically on same-site page links.</p></td></tr>
             <tr><th scope="row">Enable scroll colour flow</th><td><label><input type="checkbox" name="<?php echo esc_attr(self::OPTION); ?>[color_enabled]" value="1" <?php checked($s['color_enabled'],1); ?>> Animate between marked sections</label></td></tr>
             <?php self::field('color_position','Transition position',15,85,'% down viewport'); ?>
             <tr><th scope="row">Blend softness</th><td><select name="<?php echo esc_attr(self::OPTION); ?>[color_softness]"><option value="tight" <?php selected($s['color_softness'],'tight'); ?>>Tight — defined colour change</option><option value="balanced" <?php selected($s['color_softness'],'balanced'); ?>>Balanced — editorial (recommended)</option><option value="atmospheric" <?php selected($s['color_softness'],'atmospheric'); ?>>Atmospheric — long gradual blend</option></select></td></tr>

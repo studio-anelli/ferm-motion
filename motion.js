@@ -306,9 +306,7 @@
     var bb=b.closest('.l-section,.vc_row,.wpb_row');
     return !!(aa&&bb&&aa!==bb&&aa.parentElement===bb.parentElement&&aa.nextElementSibling===bb);
   }
-  var pageBlendRow=null;
   function paintColour(el,color){
-    if(el===pageBlendRow)return;
     if(lastColourValues.get(el)===color)return;
     el.style.setProperty('background-color',color,'important');
     lastColourValues.set(el,color);
@@ -549,110 +547,9 @@
       if(window.console&&console.warn)console.warn('[Organic Motion] Smooth scroll unavailable; using native scrolling.',error);
     }
   }
-  function initPageBlend(){
-    if(!cfg.pageBlendEnabled||reduceMotion)return;
-    var key='organic-motion-page-blend';
-    var sectionSelector='.l-section,.vc_row,.wpb_row,.dm-color-flow,main section';
-    function solidBackground(element){
-      var style=getComputedStyle(element);
-      if(style.backgroundImage!=='none')return null;
-      var channels=/^rgb\(\s*(\d+),\s*(\d+),\s*(\d+)\s*\)$/.exec(style.backgroundColor);
-      return channels ? '#'+channels.slice(1).map(function(channel){
-        return Number(channel).toString(16).padStart(2,'0');
-      }).join('').toUpperCase() : null;
-    }
-    function readSection(section){
-      if(section.querySelector('.l-section-img,.vc_parallax-inner'))return null;
-      var inner=section.querySelector(':scope > .l-section-h');
-      var element=inner&&solidBackground(inner)?inner:section;
-      var colour=solidBackground(element)||rowColor(element);
-      if(!colour||getComputedStyle(element).backgroundImage!=='none')return null;
-      return {element:element,colour:colour};
-    }
-    function visibleSection(fraction){
-      var sections=Array.from(document.querySelectorAll(sectionSelector));
-      var y=window.innerHeight*fraction;
-      var visible=sections.filter(function(section){
-        var rect=section.getBoundingClientRect();
-        return rect.width>=window.innerWidth*.5 && rect.bottom>0 && rect.top<window.innerHeight &&
-          rect.height>0 && getComputedStyle(section).visibility==='visible';
-      });
-      return visible.find(function(section){
-        var rect=section.getBoundingClientRect();
-        return rect.top<=y&&rect.bottom>y;
-      })||visible[0];
-    }
-    function clickedLink(event){
-      if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
-      var link=event.target.closest&&event.target.closest('a[href]');
-      if(!link||link.hasAttribute('download')||link.closest('#wpadminbar')||(link.target&&link.target.toLowerCase()!=='_self'))return;
-      var url=new URL(link.href,location.href);
-      if(url.origin!==location.origin||url.hash||url.href===location.href)return;
-      if(url.pathname===location.pathname&&url.search===location.search)return;
-      var section=link.closest(sectionSelector);
-      var source=section&&readSection(section);
-      if(!source){
-        section=visibleSection(.5);
-        source=section&&readSection(section);
-      }
-      if(!source)return;
-      var colour=source.colour;
-      try{sessionStorage.setItem(key,JSON.stringify({url:url.href,colour:colour,time:Date.now()}));}catch(error){}
-    }
-    document.addEventListener('click',clickedLink);
-    window.addEventListener('pageshow',function(event){
-      if(event.persisted){
-        try{sessionStorage.removeItem(key);}catch(error){}
-      }
-    });
-    var handoff;
-    try{
-      handoff=JSON.parse(sessionStorage.getItem(key));
-      sessionStorage.removeItem(key);
-    }catch(error){return;}
-    if(!handoff||handoff.url!==location.href||Date.now()-handoff.time>10000)return;
-    var from=validHex(handoff.colour);
-    var section=visibleSection(.18);
-    var destination=section&&readSection(section);
-    if(!from||!destination)return;
-    var row=destination.element;
-
-    var priorImage=row.style.getPropertyValue('background-image');
-    var priorImagePriority=row.style.getPropertyPriority('background-image');
-    var priorColour=row.style.getPropertyValue('background-color');
-    var priorColourPriority=row.style.getPropertyPriority('background-color');
-    var to=destination.colour;
-    if(from===to)return;
-    pageBlendRow=row;
-    var start=performance.now();
-    function frame(now){
-      var progress=Math.min(1,Math.max(0,(now-start)/1000));
-      if(progress===1){
-        row.style.setProperty('background-image',priorImage,priorImagePriority);
-        row.style.setProperty('background-color',priorColour,priorColourPriority);
-        pageBlendRow=null;
-        lastColourValues.delete(row);
-        schedule();
-        return;
-      }
-      var eased=progress*progress*(3-2*progress);
-      var rgb=hexRgb(to).join(',');
-      var wash=(Math.sin(Math.PI*eased)*.7).toFixed(3);
-      row.style.setProperty('background-image',
-        'radial-gradient(ellipse at '+(22+eased*31)+'% '+(70-eased*20)+'%, rgba('+rgb+','+wash+') 0%, transparent 65%),'+
-        'radial-gradient(ellipse at '+(80-eased*17)+'% '+(20+eased*19)+'%, rgba('+rgb+','+wash+') 0%, transparent 55%)','important');
-      row.style.setProperty('background-color',blendHex(from,to,eased),'important');
-      requestAnimationFrame(frame);
-    }
-    frame(start);
-  }
   function start(){
     init(document);
     initColours();
-    // Read the actual destination colour after dropping the temporary first-paint styles.
-    var firstPaint=document.getElementById('ferm-page-blend-cover');
-    if(firstPaint)firstPaint.remove();
-    initPageBlend();
     initSmoothScroll();
     schedule();
   }
